@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Timetable – Annamalai University</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --navy:#0f2340; --navy2:#162d4a; --teal:#0d7d6b; --teal2:#0a6357; --tealp:#e8f5f2;
+  --gold:#c8972a; --goldp:#fef8ec; --cream:#f8f4ee;
+  --white:#fff; --gray1:#f5f5f5; --gray2:#e4e4e4; --gray3:#9a9a9a; --gray4:#555;
+  --red:#c0392b; --green:#1a7a4a; --green2:#27ae60;
+  --shadow:0 2px 16px rgba(15,35,64,.10);
+  --radius:10px; --trans:all .18s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--navy);color:#fff;padding:11px 22px;display:flex;align-items:center;gap:13px;border-bottom:3px solid var(--teal);}
+.hlogo{width:42px;height:42px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+header h1{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;line-height:1.35;}
+header p{font-size:.7rem;color:#8fb8b0;margin-top:1px;}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 68px);}
+.sidebar{width:250px;min-width:250px;background:var(--white);border-right:2px solid var(--gray2);padding:14px 12px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:calc(100vh - 68px);position:sticky;top:0;}
+.main{flex:1;padding:16px 18px;overflow-x:auto;}
+
+/* SIDEBAR */
+.s-label{font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray3);display:block;margin-bottom:4px;}
+select,input[type=text]{width:100%;padding:7px 10px;border:1.5px solid var(--gray2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;background:var(--gray1);color:var(--navy);outline:none;transition:border .2s;}
+select:focus,input:focus{border-color:var(--teal);}
+
+.oe-btns{display:flex;gap:7px;}
+.oe-btn{flex:1;padding:7px;border:2px solid var(--gray2);border-radius:8px;background:var(--white);font-family:'Syne',sans-serif;font-weight:700;font-size:.73rem;cursor:pointer;transition:var(--trans);text-align:center;}
+.oe-btn.active.odd{background:#fff3e0;border-color:var(--gold);color:#7a5800;}
+.oe-btn.active.even{background:#e8f0ff;border-color:#2980b9;color:#1a3c6e;}
+
+/* FACULTY SIDEBAR CARDS */
+.fac-list{display:flex;flex-direction:column;gap:5px;}
+.fac-card{background:var(--tealp);border:1.5px solid #b3ddd6;border-radius:8px;padding:7px 10px;cursor:pointer;transition:var(--trans);position:relative;}
+.fac-card:hover,.fac-card.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+.fac-card .fc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.fac-card .fc-name{font-weight:600;font-size:.79rem;flex:1;}
+.fac-card .fc-hrs{font-family:'DM Mono',monospace;font-size:.68rem;background:rgba(0,0,0,.12);border-radius:10px;padding:1px 7px;white-space:nowrap;}
+.fac-card.active .fc-hrs{background:rgba(255,255,255,.25);}
+.fac-card .fc-hrs.zero{background:var(--gray2);color:var(--gray3);}
+.fac-card .fc-short{font-size:.63rem;opacity:.65;margin-top:1px;font-family:'DM Mono',monospace;}
+.fac-card .fc-del{position:absolute;top:6px;right:6px;background:var(--red);color:#fff;border:none;border-radius:5px;padding:2px 6px;font-size:9px;cursor:pointer;font-weight:700;opacity:0;transition:opacity .2s;}
+.fac-card:hover .fc-del{opacity:1;}
+
+/* ADD FACULTY */
+.add-fac-form{display:flex;flex-direction:column;gap:6px;}
+.add-fac-form input{font-size:.82rem;}
+.btn-add{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;transition:var(--trans);}
+.btn-add:hover{background:var(--teal2);}
+
+.hint-box{background:var(--tealp);border:1px solid #b3ddd6;border-radius:8px;padding:8px 10px;font-size:.7rem;color:var(--teal2);line-height:1.5;}
+.hint-box strong{color:var(--navy);}
+
+/* MAIN CONTENT */
+.top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.view-btns{display:flex;gap:6px;}
+.view-btn{padding:6px 16px;border:1.5px solid var(--gray2);border-radius:7px;background:var(--white);font-family:'Syne',sans-serif;font-size:.73rem;font-weight:700;cursor:pointer;transition:var(--trans);}
+.view-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* FACULTY BAR */
+.fac-bar{background:var(--white);border:1px solid var(--gray2);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;box-shadow:var(--shadow);}
+.fac-bar-title{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray3);margin-bottom:10px;}
+.fac-bar-grid{display:flex;gap:10px;flex-wrap:wrap;}
+.fbc{background:var(--gray1);border:1.5px solid var(--gray2);border-radius:8px;padding:9px 13px;min-width:130px;transition:var(--trans);}
+.fbc.has-hrs{border-color:var(--teal);background:rgba(13,125,107,.05);}
+.fbc.clash{border-color:var(--red)!important;background:#fff5f5!important;}
+.fbc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;}
+.fbc-name{font-size:.78rem;font-weight:700;color:var(--navy);}
+.fbc-total{font-family:'DM Mono',monospace;font-size:.7rem;background:var(--gray2);color:var(--gray3);padding:1px 8px;border-radius:10px;}
+.fbc.has-hrs .fbc-total{background:var(--teal);color:#fff;}
+.fbc-empty{font-size:.67rem;color:var(--gray3);font-style:italic;}
+.fbc-rows{display:flex;flex-direction:column;gap:2px;}
+.fbc-row{display:flex;align-items:center;gap:5px;font-size:.67rem;}
+.fbc-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;}
+.fbc-sub{color:var(--gray4);}
+.fbc-cnt{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--teal);margin-left:2px;}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:.72rem;color:var(--gray4);margin-bottom:14px;}
+.leg-dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:4px;border:1px solid transparent;}
+
+/* CLASS TABS */
+.class-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.class-tab{padding:7px 16px;border:1.5px solid var(--gray2);border-radius:7px;background:var(--white);font-family:'Syne',sans-serif;font-size:.73rem;font-weight:700;cursor:pointer;transition:var(--trans);}
+.class-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.tab-sem{font-size:.62rem;font-family:'DM Mono',monospace;opacity:.7;margin-left:5px;}
+
+/* PANELS GRID */
+.panels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:16px;}
+.panels-single{display:block;}
+
+/* CLASS PANEL */
+.class-panel{background:var(--white);border:1.5px solid var(--gray2);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.cp-header{background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cp-title{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;}
+.cp-badges{display:flex;gap:5px;}
+.cp-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}
+
+/* SUBJECT CHIPS */
+.sub-chips{padding:9px 12px;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--gray1);background:var(--gray1);}
+.chip{padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:var(--trans);white-space:nowrap;position:relative;}
+.chip:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.chip.sel{outline:2px solid var(--navy);outline-offset:1px;}
+.chip.done{opacity:.65;}
+.chip .chrs{font-size:.6rem;opacity:.7;margin-left:2px;}
+.chip .done-btn{position:absolute;top:-3px;right:-4px;background:var(--green2);color:#fff;border:none;border-radius:50%;width:13px;height:13px;font-size:7px;cursor:pointer;display:none;align-items:center;justify-content:center;font-weight:800;line-height:1;}
+.chip:hover .done-btn{display:flex;}
+
+/* TIMETABLE */
+.tt-wrap{overflow-x:auto;}
+.tt{width:100%;border-collapse:collapse;min-width:300px;}
+.tt thead th{background:var(--navy2);color:rgba(255,255,255,.8);padding:6px 4px;text-align:center;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-right:1px solid rgba(255,255,255,.08);white-space:nowrap;}
+.tt thead th:first-child{text-align:left;padding-left:10px;width:50px;}
+.tt tbody tr{border-bottom:1px solid var(--gray1);}
+.tt tbody tr:last-child{border-bottom:none;}
+.tt tbody tr:hover{background:rgba(13,125,107,.02);}
+.tt td{padding:0;border-right:1px solid var(--gray1);vertical-align:middle;}
+.tt td:last-child{border-right:none;}
+
+.day-c{padding:6px 8px;font-weight:700;font-size:.72rem;color:var(--navy);background:var(--gray1);white-space:nowrap;}
+
+/* EMPTY CELL */
+.ec{min-height:42px;min-width:60px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#ccc;font-size:16px;transition:var(--trans);}
+.ec:hover{background:rgba(13,125,107,.07);color:var(--teal);}
+.ec.ready{background:rgba(13,125,107,.08);color:var(--teal);font-size:18px;font-weight:800;border:1.5px dashed var(--teal);}
+
+/* FILLED CELL */
+.fc{min-height:42px;min-width:60px;padding:4px 5px;border-radius:5px;margin:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative;cursor:default;}
+.fc .short{font-size:.75rem;font-weight:700;line-height:1.25;text-align:center;}
+.fc .fac-tag{font-size:.6rem;opacity:.7;line-height:1.2;text-align:center;}
+.fc .done-tag{font-size:.55rem;background:var(--green2);color:#fff;padding:1px 5px;border-radius:5px;margin-top:1px;}
+.fc .del-btn{position:absolute;top:1px;right:1px;background:var(--red);color:#fff;border:none;border-radius:3px;width:13px;height:13px;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center;font-weight:900;line-height:1;}
+.fc:hover .del-btn{display:flex;}
+.clash-cell{outline:2px solid var(--red)!important;outline-offset:-1px;}
+
+/* MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--white);border-radius:12px;padding:24px;width:380px;max-width:95vw;box-shadow:0 12px 48px rgba(0,0,0,.22);}
+.modal-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:16px;}
+.modal label{font-size:.78rem;font-weight:600;color:var(--gray4);display:block;margin-bottom:4px;margin-top:12px;}
+.modal select{margin-bottom:4px;}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+.btn-ok{flex:1;background:var(--teal);color:#fff;border:none;border-radius:8px;padding:9px;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;}
+.btn-ok:hover{background:var(--teal2);}
+.btn-cancel{padding:9px 16px;border:1.5px solid var(--gray2);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer;}
+
+/* HINT TOAST */
+#hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 22px;border-radius:22px;font-size:.8rem;font-family:'DM Sans',sans-serif;z-index:9999;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+
+/* PRINT */
+@media print{.sidebar,.top-bar,.fac-bar,header .hlogo{display:none!important;}.main{padding:0;}}
+
+/* PDF / PRINT BAR */
+.pdf-bar{background:var(--white);border:1.5px solid var(--gray2);border-radius:10px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.pdf-bar.show{display:flex;}
+.pdf-btn{padding:7px 14px;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;transition:var(--trans);display:flex;align-items:center;gap:5px;}
+.pdf-btn.red{background:#c0392b;color:#fff;}
+.pdf-btn.gold{background:var(--gold);color:#fff;}
+.pdf-btn.navy{background:var(--navy);color:#fff;}
+.pdf-btn.outline{background:transparent;color:var(--navy);border:1.5px solid var(--gray2);}
+.pdf-btn:hover{opacity:.88;transform:translateY(-1px);}
+#saveStatus{font-size:.75rem;font-weight:600;}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hlogo">🎓</div>
+  <div>
+    <h1>Annamalai University — CS Department Timetable</h1>
+    <p>Department of Computer Science &nbsp;·&nbsp; Timetable Management System &nbsp;·&nbsp; 2023–2024</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div>
+      <span class="s-label">Odd / Even Semester</span>
+      <div class="oe-btns">
+        <button class="oe-btn odd" id="oeOdd"  onclick="setOE('odd')">☀ Shift I<br><span style="font-size:.6rem;font-weight:400">ODD 1,3,5</span></button>
+        <button class="oe-btn even" id="oeEven" onclick="setOE('even')">🌙 Shift II<br><span style="font-size:.6rem;font-weight:400">EVEN 2,4,6</span></button>
+      </div>
+    </div>
+
+    <div>
+      <span class="s-label">Hours Per Day</span>
+      <select id="hoursSelect" onchange="onHoursChange()">
+        <option value="5" selected>5 Hours</option>
+        <option value="6">6 Hours</option>
+      </select>
+    </div>
+
+    <div>
+      <span class="s-label" style="color:var(--teal);display:flex;align-items:center;gap:5px;">
+        <span style="font-size:1rem">＋</span> Add Faculty
+      </span>
+      <div class="add-fac-form">
+        <input type="text" id="newFacName"  placeholder="Full name e.g. Dr. S. Ponnusamy">
+        <input type="text" id="newFacShort" placeholder="Short e.g. Dr. Ponnusamy">
+        <button class="btn-add" onclick="addFaculty()">Add Faculty Member</button>
+      </div>
+    </div>
+
+    <div class="hint-box">
+      <strong>① Select Faculty →</strong><br>
+      <strong>② Click Subject Chip →</strong><br>
+      Faculty + Subject = hours auto-assigned!
+    </div>
+
+    <div>
+      <span class="s-label">Faculty</span>
+      <div class="fac-list" id="facList"></div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainWrap">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="class-tabs" id="classTabs"></div>
+      <div class="view-btns" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <button class="view-btn" id="btnSingle" onclick="setView('single')">Single Class</button>
+        <button class="view-btn active" id="btnAll" onclick="setView('all')">All 5 Classes</button>
+      </div>
+    </div>
+
+    <!-- SAVE / LOAD BAR -->
+    <div id="saveBar" style="background:var(--white);border:1.5px solid var(--gray2);border-radius:10px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:var(--shadow);">
+      <span style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--gray3)">💾 Database</span>
+      <button onclick="saveToDB()" style="padding:7px 14px;border:none;border-radius:7px;background:var(--teal);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">💾 Save Timetable</button>
+      <button onclick="loadFromDB()" style="padding:7px 14px;border:none;border-radius:7px;background:var(--navy);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">📂 Load Saved</button>
+      <button onclick="exportJSON()" style="padding:7px 14px;border:1.5px solid var(--gray2);border-radius:7px;background:transparent;color:var(--navy);font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">⬇ Export JSON</button>
+      <span id="saveStatus" style="font-size:.75rem;font-weight:600;margin-left:4px;"></span>
+      <span style="margin-left:auto;font-size:.68rem;color:var(--gray3);">API: <code style="background:var(--gray1);padding:2px 5px;border-radius:4px;font-size:.65rem;">api/timetable.php</code></span>
+    </div>
+
+    <!-- PDF REPORT BAR -->
+    <div id="pdfBar" style="background:var(--white);border:1.5px solid var(--gray2);border-radius:10px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:var(--shadow);">
+      <span style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--gray3)">📄 PDF Reports</span>
+      <button onclick="pdfAllClasses()" style="padding:7px 14px;border:none;border-radius:7px;background:#c0392b;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">📋 All Classes PDF</button>
+      <button onclick="pdfClassWise()" style="padding:7px 14px;border:none;border-radius:7px;background:var(--gold);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">🗓 Class-wise PDF</button>
+      <button onclick="pdfFacultyReport()" style="padding:7px 14px;border:none;border-radius:7px;background:var(--navy);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">👤 Faculty Report PDF</button>
+      <button onclick="openLabReport()" style="padding:7px 14px;border:none;border-radius:7px;background:#1a7a4a;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;">🔬 Lab Report</button>
+      <span id="pdfStatus" style="font-size:.75rem;font-weight:600;color:var(--teal);margin-left:4px;"></span>
+    </div>
+
+    <!-- FACULTY BAR -->
+    <div class="fac-bar" id="facBar" style="display:none">
+      <div class="fac-bar-title">🏋️ Faculty Allocation — Total Hours Across All Classes <span id="facBarTotal" style="color:var(--teal);font-weight:700"></span></div>
+      <div class="fac-bar-grid" id="facBarGrid"></div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend" id="legendRow" style="display:none">
+      <span><span class="leg-dot" style="background:#f5eeff;border-color:#9b59b6"></span>Tamil/Lang</span>
+      <span><span class="leg-dot" style="background:#fff5e6;border-color:#e67e22"></span>English</span>
+      <span><span class="leg-dot" style="background:#e8f7ef;border-color:#1a7a4a"></span>Core</span>
+      <span><span class="leg-dot" style="background:#e8faf5;border-color:#16a085"></span>Lab</span>
+      <span><span class="leg-dot" style="background:#eaf4ff;border-color:#2980b9"></span>Elective</span>
+      <span><span class="leg-dot" style="background:#fff3e0;border-color:#d35400"></span>Skill/SEC</span>
+      <span><span class="leg-dot" style="background:#f2f3f4;border-color:#7f8c8d"></span>Foundation</span>
+      <span><span class="leg-dot" style="background:#d5f5e3;border-color:#27ae60"></span>✓ Done</span>
+    </div>
+
+    <!-- WELCOME -->
+    <div id="welcome" style="text-align:center;padding:60px 20px;">
+      <div style="font-size:3rem;margin-bottom:16px">📅</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:8px">CS Department Timetable</div>
+      <div style="color:var(--gray3);font-size:.9rem">Select <strong>Shift I (Odd)</strong> or <strong>Shift II (Even)</strong> to begin</div>
+    </div>
+
+    <!-- PANELS -->
+    <div id="classPanels" class="panels-grid"></div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="cellModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Assign Subject</div>
+    <label>Faculty</label>
+    <select id="modalFac"></select>
+    <label>Subject</label>
+    <select id="modalSub"></select>
+    <div class="modal-btns">
+      <button class="btn-ok" onclick="applyModal()">✓ Assign</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="hint"></div>
+
+<!-- CELL DETAIL MODAL -->
+<div class="modal-backdrop" id="cellDetailModal">
+  <div class="modal" style="width:420px;max-width:95vw">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>📋 Slot Details</span>
+      <button class="btn-cancel" style="padding:4px 10px;font-size:.78rem" onclick="closeCellDetail()">✕</button>
+    </div>
+    <div id="cellDetailBody" style="font-size:.86rem;line-height:1.8"></div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn-ok" onclick="closeCellDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAB REPORT MODAL -->
+<div class="modal-backdrop" id="labReportModal">
+  <div class="modal" style="width:700px;max-width:98vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>🔬 Laboratory Timetable Report</span>
+      <button class="btn-cancel" style="padding:4px 10px;font-size:.78rem" onclick="closeLabReport()">✕</button>
+    </div>
+    <div id="labReportBody"></div>
+    <div class="modal-btns">
+      <button class="btn-ok" onclick="pdfLabReport()">📥 Download PDF</button>
+      <button class="btn-cancel" onclick="closeLabReport()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- WRONG ASSIGN POPUP -->
+<div class="modal-backdrop" id="wrongAssignModal">
+  <div class="modal" style="width:420px;border:2px solid var(--red)">
+    <div class="modal-title" style="color:var(--red);display:flex;align-items:center;gap:8px">
+      <span style="font-size:1.4rem">⚠️</span> Wrong Assignment Detected!
+    </div>
+    <div id="wrongAssignBody" style="font-size:.86rem;color:#333;line-height:1.8;margin-bottom:10px"></div>
+    <div class="modal-btns">
+      <button class="btn-ok" style="background:var(--red)" onclick="closeWrongAssign()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const CLASSES = ['I B.Sc','II B.Sc','III B.Sc','I M.Sc','II M.Sc'];
+
+const CLASS_ODD  = {'I B.Sc':1,'II B.Sc':3,'III B.Sc':5,'I M.Sc':1,'II M.Sc':3};
+const CLASS_EVEN = {'I B.Sc':2,'II B.Sc':4,'III B.Sc':6,'I M.Sc':2,'II M.Sc':4};
+const CLASS_PROG = {'I B.Sc':'UG','II B.Sc':'UG','III B.Sc':'UG','I M.Sc':'PG','II M.Sc':'PG'};
+
+// Shift timings
+const SHIFT_TIMES = {
+  odd:  ['8:30–9:20','9:20–10:10','10:10–11:00','11:10–12:00','12:00–12:50'],
+  even: ['1:00–1:50','1:50–2:40','2:40–3:30','3:40–4:30','4:30–5:20'],
+};
+
+const DCOL = {
+  tamil:      {bg:'#f5eeff',bdr:'#9b59b6',txt:'#6c3483'},
+  english:    {bg:'#fff5e6',bdr:'#e67e22',txt:'#a04000'},
+  core:       {bg:'#e8f7ef',bdr:'#1a7a4a',txt:'#1a5c38'},
+  lab:        {bg:'#e8faf5',bdr:'#16a085',txt:'#0e6655'},
+  elective:   {bg:'#eaf4ff',bdr:'#2980b9',txt:'#1a5276'},
+  skill:      {bg:'#fff3e0',bdr:'#d35400',txt:'#7d3c00'},
+  foundation: {bg:'#f2f3f4',bdr:'#7f8c8d',txt:'#2c3e50'},
+  other:      {bg:'#fff9f0',bdr:'#e67e22',txt:'#7d3000'},
+};
+
+// ============================================================
+// SHORT NAMES
+// ============================================================
+const SHORT = {
+  // UG Sem 1
+  'Python Programming':                   'Python',
+  'Python Programming Lab':               'Py Lab',
+  'Mathematical Foundations - I':         'Math-I',
+  // UG Sem 2
+  'Data Structure and Algorithms':        'DSA',
+  'Data Structure and Algorithms Lab':    'DSA Lab',
+  'Mathematical Foundations - II':        'Math-II',
+  // UG Sem 3
+  'Object Oriented Programming with C++': 'OOP C++',
+  'Object Oriented Programming with C++ Lab': 'OOP Lab',
+  'Enterprise Resource Planning':         'ERP',
+  'Digital Computer Fundamentals':        'DCF',
+  // UG Sem 4
+  'Java Programming':                     'Java',
+  'Java Programming Lab':                 'Java Lab',
+  'PHP Programming':                      'PHP',
+  'Computer Networks':                    'C.Net',
+  // UG Sem 5
+  'Software Engineering':                 'SE',
+  'Database Management System':           'DBMS',
+  'Database Management System Lab':       'DBMS Lab',
+  'Operating Systems':                    'OS',
+  'Data Mining and Warehousing':          'DM&W',
+  // UG Sem 6
+  'Microprocessor and Microcontroller':   'MP&MC',
+  '.NET Programming':                     '.NET',
+  '.NET Programming Lab':                 '.NET Lab',
+  'Big Data Analytics':                   'BigData',
+  // PG Sem 1
+  'Analysis & Design of Algorithms':      'ADA',
+  'Algorithm and Python Lab':             'Algo Lab',
+  'Advance Software Engineering':         'Adv SE',
+  'Embedded Systems / IoT':               'IoT',
+  // PG Sem 2
+  'Data Mining & Advanced Java Lab':      'DM Lab',
+  'Advanced Java Programming':            'Adv Java',
+  'AI & Machine Learning':                'AI&ML',
+  'Mobile Computing / Blockchain':        'MC/BC',
+  'OOP through Java, HTML Basics':        'OOP Java',
+  // PG Sem 3
+  'Digital Image Processing':             'DIP',
+  'Cloud Computing':                      'Cloud',
+  'Network Security and Cryptography':    'NSC',
+  'Data Science & Analytics':             'DS&A',
+  'Digital Image Processing Lab (MATLAB)':'DIP Lab',
+  'Cloud Computing Lab':                  'Cloud Lab',
+  // PG Sem 4
+  'Data Analytics Lab':                   'DA Lab',
+  'Web Application Dev & Hosting':        'Web Dev',
+  'Introduction to Robotics / VR':        'Robotics',
+  'Soft Skills':                          'Soft Skill',
+  // Language
+  'Tamil - I':'Tam-I','Tamil - II':'Tam-II','Tamil - III':'Tam-III','Tamil - IV':'Tam-IV',
+  'General English - I':'Eng-I','General English - II':'Eng-II',
+  'General English - III':'Eng-III','General English - IV':'Eng-IV',
+};
+
+function getShort(name){
+  if(SHORT[name]) return SHORT[name];
+  const w = name.split(/[\s\-:\/&]+/).filter(x=>x.length>1);
+  if(w.length<=2) return name.substring(0,9);
+  return w.slice(0,3).map(x=>x[0].toUpperCase()).join('');
+}
+
+// ============================================================
+// SUBJECTS DATA
+// ============================================================
+const SUBJECTS = {
+  UG: {
+    1:[ // Odd sem I (Sem I)
+      {code:'23UCSCC13',name:'Python Programming',           dept:'core',       hrs:5, type:'Theory'},
+      {code:'23UCSCP14',name:'Python Programming Lab',       dept:'lab',        hrs:5, type:'Lab'},
+      {code:'23UMAFE15',name:'Mathematical Foundations - I', dept:'elective',   hrs:4, type:'Theory'},
+    ],
+    2:[ // Even sem I (Sem II)
+      {code:'23UCSCC23',name:'Data Structure and Algorithms',     dept:'core',  hrs:5, type:'Theory'},
+      {code:'23UCSCP24',name:'Data Structure and Algorithms Lab', dept:'lab',   hrs:5, type:'Lab'},
+      {code:'23UMAFE25',name:'Mathematical Foundations - II',     dept:'elective',hrs:4,type:'Theory'},
+    ],
+    3:[ // Odd sem II (Sem III)
+      {code:'23UCSCC33',name:'Object Oriented Programming with C++',     dept:'core',hrs:5,type:'Theory'},
+      {code:'23UCSCP34',name:'Object Oriented Programming with C++ Lab', dept:'lab', hrs:4,type:'Lab'},
+      {code:'23UCSCS36',name:'Enterprise Resource Planning',             dept:'skill',hrs:1,type:'Theory'},
+      {code:'23UCSCS37',name:'Digital Computer Fundamentals',            dept:'skill',hrs:2,type:'Theory'},
+    ],
+    4:[ // Even sem II (Sem IV)
+      {code:'23UCSCC43',name:'Java Programming',     dept:'core',  hrs:5,type:'Theory'},
+      {code:'23UCSCP44',name:'Java Programming Lab', dept:'lab',   hrs:3,type:'Lab'},
+      {code:'23UCSCS46',name:'PHP Programming',      dept:'skill', hrs:2,type:'Theory'},
+      {code:'23UCSCS47',name:'Computer Networks',    dept:'skill', hrs:2,type:'Theory'},
+    ],
+    5:[ // Odd sem III (Sem V)
+      {code:'23UCSCC51',name:'Software Engineering',           dept:'core',    hrs:5,type:'Theory'},
+      {code:'23UCSCC52',name:'Database Management System',     dept:'core',    hrs:5,type:'Theory'},
+      {code:'23UCSCP53',name:'Database Management System Lab', dept:'lab',     hrs:5,type:'Lab'},
+      {code:'23UCSCE55',name:'Operating Systems',              dept:'elective',hrs:4,type:'Theory'},
+      {code:'23UCSCE56',name:'Data Mining and Warehousing',    dept:'elective',hrs:4,type:'Theory'},
+    ],
+    6:[ // Even sem III (Sem VI)
+      {code:'23UCSCC61',name:'Microprocessor and Microcontroller', dept:'core', hrs:6,type:'Theory'},
+      {code:'23UCSCC62',name:'.NET Programming',                   dept:'core', hrs:6,type:'Theory'},
+      {code:'23UCSCP63',name:'.NET Programming Lab',               dept:'lab',  hrs:6,type:'Lab'},
+      {code:'23UCSCF66',name:'Big Data Analytics',                 dept:'skill',hrs:2,type:'Theory'},
+    ],
+  },
+  PG: {
+    1:[ // Odd sem I (Sem I)
+      {code:'23PCSCC11',name:'Analysis & Design of Algorithms', dept:'core',    hrs:7,type:'Theory'},
+      {code:'23PCSCC12',name:'Python Programming',              dept:'core',    hrs:7,type:'Theory'},
+      {code:'23PCSCP13',name:'Algorithm and Python Lab',        dept:'lab',     hrs:6,type:'Lab'},
+      {code:'23PCSCE14',name:'Advance Software Engineering',    dept:'elective',hrs:5,type:'Theory'},
+      {code:'23PCSCE15',name:'Embedded Systems / IoT',          dept:'elective',hrs:5,type:'Theory'},
+    ],
+    2:[ // Even sem I (Sem II)
+      {code:'23PCSCC21',name:'Data Mining and Warehousing',    dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCP22',name:'Data Mining & Advanced Java Lab',dept:'lab',     hrs:6,type:'Lab'},
+      {code:'23PCSCC23',name:'Advanced Java Programming',      dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCE24',name:'AI & Machine Learning',          dept:'elective',hrs:4,type:'Theory'},
+      {code:'23PCSCE25',name:'Mobile Computing / Blockchain',  dept:'elective',hrs:4,type:'Theory'},
+      {code:'23PCSCS26',name:'OOP through Java, HTML Basics',  dept:'skill',   hrs:4,type:'Theory'},
+    ],
+    3:[ // Odd sem II (Sem III)
+      {code:'23PCSCC31',name:'Digital Image Processing',                 dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCC32',name:'Cloud Computing',                          dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCC33',name:'Network Security and Cryptography',        dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCC34',name:'Data Science & Analytics',                 dept:'core',    hrs:6,type:'Theory'},
+      {code:'23PCSCE35',name:'Digital Image Processing Lab (MATLAB)',    dept:'lab',     hrs:3,type:'Lab'},
+      {code:'23PCSCS36',name:'Cloud Computing Lab',                      dept:'lab',     hrs:3,type:'Lab'},
+    ],
+    4:[ // Even sem II (Sem IV)
+      {code:'23PCSCP41',name:'Data Analytics Lab',           dept:'lab',     hrs:6,type:'Lab'},
+      {code:'23PCSCP42',name:'Web Application Dev & Hosting',dept:'lab',     hrs:6,type:'Lab'},
+      {code:'23PCSCE44',name:'Introduction to Robotics / VR',dept:'elective',hrs:4,type:'Theory'},
+      {code:'23PCSCS45',name:'Soft Skills',                  dept:'skill',   hrs:4,type:'Theory'},
+      
+    ],
+  },
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let FACULTY = [];  // Will be loaded from API
+let SUBJECTS_API = {}; // Loaded from API: key = 'UG_I_Odd' → [{code,name,hrs,dept,type,faculty_id,faculty_name}]
+
+// Load faculty from DB on startup
+async function loadFacultyFromAPI() {
+  try {
+    const res = await fetch('api/faculty.php');
+    const j = await res.json();
+    if (j.success && j.data && j.data.length) {
+      FACULTY = j.data.map(f => ({
+        id:    'DB' + f.id,        // unique id
+        dbId:  f.id,
+        name:  f.name,
+        short: f.name             // use full name as short for matching
+      }));
+      renderFacList();
+      renderFacBar();
+    }
+  } catch(e) {
+    console.warn('Could not load faculty from API:', e);
+  }
+}
+
+// Load subjects from DB for a class+semester
+async function loadSubjectsFromAPI(prog, semNum, semType) {
+  const key = `${prog}_${semNum}_${semType}`;
+  if (SUBJECTS_API[key]) return SUBJECTS_API[key]; // cached
+  try {
+    const params = new URLSearchParams({ prog, sem: romanSem(semNum), sem_type: semType });
+    const res = await fetch('api/subjects.php?' + params);
+    const j = await res.json();
+    if (j.success && j.data) {
+      SUBJECTS_API[key] = j.data.map(s => ({
+        code:       s.code || String(s.id),
+        name:       s.name,
+        hrs:        s.hours_per_week,
+        dept:       s.subject_type === 'Lab' ? 'lab' : 'core',
+        type:       s.subject_type,
+        faculty_id: s.faculty_id,
+        faculty_name: s.faculty_name || ''
+      }));
+      return SUBJECTS_API[key];
+    }
+  } catch(e) { console.warn('Subject API error', e); }
+  return [];
+}
+
+// Convert number sem to roman (1→I, 2→II etc.)
+function romanSem(n) {
+  return ['I','II','III','IV','V','VI'][n-1] || String(n);
+}
+
+let ttData       = {};  // key: 'I B.Sc_1' → {'Monday_1':{subCode,subName,faculty}}
+let completedSubs = {}; // key: 'I B.Sc_1' → Set of codes
+let selectedSubs  = {}; // key: 'I B.Sc_1' → selected subCode
+
+let currentOE   = '';
+let currentView = 'all';
+let singleClass = 'I B.Sc';
+let pendingCell = null;
+let facIdCtr    = 200;
+
+// ============================================================
+// FACULTY
+// ============================================================
+function addFaculty(){
+  const name  = document.getElementById('newFacName').value.trim();
+  const short = document.getElementById('newFacShort').value.trim();
+  if(!name){showHint('⚠️ Enter faculty name'); return;}
+  FACULTY.push({id:'F'+facIdCtr++, name, short: short||name.split(' ').pop()});
+  document.getElementById('newFacName').value  = '';
+  document.getElementById('newFacShort').value = '';
+  renderFacList();
+  renderFacBar();
+}
+
+function deleteFaculty(id, e){
+  e && e.stopPropagation();
+  if(!confirm('Remove this faculty member?')) return;
+  FACULTY = FACULTY.filter(f => f.id !== id);
+  renderFacList();
+  renderAll();
+}
+
+function renderFacList(){
+  const activeFid = (document.querySelector('.fac-card.active') || {}).dataset ? document.querySelector('.fac-card.active').dataset.fid : null;
+  document.getElementById('facList').innerHTML = FACULTY.map(f => {
+    const hrs = getTotalHrs(f.short);
+    const isActive = f.id === activeFid;
+    return `<div class="fac-card${isActive?' active':''}" data-fid="${f.id}" onclick="selFac(this)">
+      <div class="fc-top">
+        <div class="fc-name">${f.name}</div>
+        <span class="fc-hrs${hrs===0?' zero':''}">${hrs}h</span>
+      </div>
+      <div class="fc-short">${f.short}</div>
+      <button class="fc-del" onclick="deleteFaculty('${f.id}',event)">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function selFac(el){
+  const fid = el.dataset.fid;
+  // Toggle off if already active
+  if(el.classList.contains('active')){
+    el.classList.remove('active');
+    renderAll();
+    return;
+  }
+  document.querySelectorAll('.fac-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+
+  const fac = FACULTY.find(f => f.id === fid);
+  if(!fac){ renderAll(); return; }
+
+  // Auto-assign for any class that already has a subject chip selected
+  let anyAssigned = false;
+  CLASSES.forEach(cls => {
+    const sem = getSem(cls); if(!sem) return;
+    const selCode = selectedSubs[`${cls}_${sem}`];
+    if(selCode){
+      autoAssignSubject(cls, sem, selCode, fac.short);
+      anyAssigned = true;
+    }
+  });
+
+  if(!anyAssigned){
+    showHint('👆 Now click a subject chip to auto-assign hours');
+    renderAll();
+  }
+
+  // Re-apply active class after renderAll (renderFacList rebuilds DOM)
+  setTimeout(() => {
+    const card = document.querySelector(`.fac-card[data-fid="${fid}"]`);
+    if(card) card.classList.add('active');
+  }, 0);
+}
+
+function getActiveFac(){
+  const af = document.querySelector('.fac-card.active');
+  if(!af) return null;
+  return FACULTY.find(f => f.id === af.dataset.fid) || null;
+}
+
+// ============================================================
+// ODD / EVEN
+// ============================================================
+function setOE(oe){
+  currentOE = oe;
+  document.getElementById('oeOdd').classList.toggle('active',  oe==='odd');
+  document.getElementById('oeEven').classList.toggle('active', oe==='even');
+  document.getElementById('welcome').style.display    = 'none';
+  document.getElementById('facBar').style.display     = 'block';
+  document.getElementById('legendRow').style.display  = 'flex';
+  document.getElementById('saveBar').style.display    = 'flex';
+  document.getElementById('pdfBar').style.display     = 'flex';
+  buildTabs();
+  // Pre-load subjects from API then render
+  preloadSubjectsForOE().then(() => renderAll());
+}
+
+function getSem(cls){
+  const map = currentOE === 'odd' ? CLASS_ODD : CLASS_EVEN;
+  return map[cls];
+}
+
+function getSubjects(cls, sem){
+  const prog    = CLASS_PROG[cls];
+  const semType = currentOE === 'odd' ? 'Odd' : 'Even';
+  const key     = `${prog}_${sem}_${semType}`;
+  // Use API data if loaded, fallback to static
+  if (SUBJECTS_API[key] && SUBJECTS_API[key].length) return SUBJECTS_API[key];
+  return (SUBJECTS[prog] || {})[sem] || [];
+}
+
+// Pre-load subjects for current OE when rendering
+async function preloadSubjectsForOE() {
+  const semType = currentOE === 'odd' ? 'Odd' : 'Even';
+  const clsList = Object.keys(CLASS_PROG);
+  for (const cls of clsList) {
+    const sem  = getSem(cls);
+    const prog = CLASS_PROG[cls];
+    await loadSubjectsFromAPI(prog, sem, semType);
+  }
+}
+
+function onHoursChange(){ if(currentOE) renderAll(); }
+
+// ============================================================
+// VIEW
+// ============================================================
+function setView(v){
+  currentView = v;
+  document.getElementById('btnSingle').classList.toggle('active', v==='single');
+  document.getElementById('btnAll').classList.toggle('active',    v==='all');
+  buildTabs();
+  renderAll();
+}
+
+function buildTabs(){
+  const tabs = document.getElementById('classTabs');
+  if(currentView === 'all'){
+    tabs.innerHTML = `<div class="class-tab active" style="cursor:default">All 5 Classes</div>`;
+  } else {
+    tabs.innerHTML = CLASSES.map(cls => `
+      <div class="class-tab${cls===singleClass?' active':''}" onclick="switchTab('${cls}')">
+        ${cls}<span class="tab-sem">${getSem(cls)?'Sem '+getSem(cls):''}</span>
+      </div>`).join('');
+  }
+}
+
+function switchTab(cls){
+  singleClass = cls;
+  buildTabs();
+  renderAll();
+}
+
+// ============================================================
+// HOURS / CLASH
+// ============================================================
+function ttKey(cls, sem){ return `${cls}_${sem}`; }
+
+function getCellD(cls, sem, day, h){
+  return (ttData[ttKey(cls,sem)] || {})[`${day}_${h}`] || null;
+}
+function setCellD(cls, sem, day, h, d){
+  const k = ttKey(cls,sem);
+  if(!ttData[k]) ttData[k] = {};
+  ttData[k][`${day}_${h}`] = d;
+}
+function delCellD(cls, sem, day, h){
+  const k = ttKey(cls,sem);
+  if(ttData[k]) delete ttData[k][`${day}_${h}`];
+}
+
+function getTotalHrs(facShort){
+  let t = 0;
+  CLASSES.forEach(cls => {
+    const sem = getSem(cls); if(!sem) return;
+    Object.values(ttData[ttKey(cls,sem)] || {}).forEach(c => { if(c.faculty===facShort) t++; });
+  });
+  return t;
+}
+
+function getClsHrs(facShort, cls){
+  const sem = getSem(cls); if(!sem) return 0;
+  return Object.values(ttData[ttKey(cls,sem)] || {}).filter(c => c.faculty===facShort).length;
+}
+
+function findClash(facShort, day, h, excludeCls){
+  const clashes = [];
+  CLASSES.forEach(cls => {
+    if(cls === excludeCls) return;
+    const sem = getSem(cls); if(!sem) return;
+    const c = getCellD(cls, sem, day, h);
+    if(c && c.faculty === facShort) clashes.push({cls, subName: c.subName});
+  });
+  return clashes;
+}
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll(){
+  renderFacBar();
+  renderFacList();
+  document.getElementById('classPanels').className = currentView==='all' ? 'panels-grid' : 'panels-single';
+  const show = currentView==='all' ? CLASSES : [singleClass];
+  document.getElementById('classPanels').innerHTML = show.map(cls => {
+    const sem = getSem(cls);
+    if(!sem) return '';
+    return buildClassPanel(cls, sem);
+  }).join('');
+}
+
+// ============================================================
+// BUILD CLASS PANEL
+// ============================================================
+function buildClassPanel(cls, sem){
+  const hrs     = parseInt(document.getElementById('hoursSelect').value);
+  const subs    = getSubjects(cls, sem);
+  const prog    = CLASS_PROG[cls];
+  const data    = ttData[ttKey(cls,sem)] || {};
+  const compSet = completedSubs[`${cls}_${sem}`] || new Set();
+  const selCode = selectedSubs[`${cls}_${sem}`] || '';
+  const totalAssigned = Object.keys(data).length;
+
+  // Shift time headers
+  const times = SHIFT_TIMES[currentOE] || SHIFT_TIMES.odd;
+
+  let html = `<div class="class-panel">
+    <div class="cp-header">
+      <div>
+        <div class="cp-title">📅 ${cls} — Sem ${sem} (${currentOE==='odd'?'ODD':'EVEN'})</div>
+        <div style="font-size:.65rem;opacity:.6;margin-top:2px">${prog} · ${currentOE==='odd'?'☀ Shift I · 8:30–12:50':'🌙 Shift II · 1:00–5:20'}</div>
+      </div>
+      <div class="cp-badges">
+        <span class="cp-badge" style="background:rgba(13,125,107,.3);color:#9fe8d8">${subs.length} Subj</span>
+        <span class="cp-badge" style="background:rgba(200,151,42,.3);color:#ffe08a">${totalAssigned} slots</span>
+      </div>
+    </div>`;
+
+  // Subject chips
+  html += `<div class="sub-chips">`;
+  if(subs.length === 0){
+    html += `<span style="font-size:.72rem;color:var(--gray3);font-style:italic">No subjects for this semester</span>`;
+  }
+  subs.forEach(s => {
+    const c    = DCOL[s.dept] || DCOL.other;
+    const done = compSet.has(s.code);
+    const isSel = selCode === s.code;
+    const st   = done
+      ? `background:#d5f5e3;border-color:#27ae60;color:#1a6637;`
+      : `background:${c.bg};border-color:${c.bdr};color:${c.txt};`;
+    html += `<span class="chip${done?' done':''}${isSel?' sel':''}" style="${st}"
+      onclick="selChipFor('${cls}',${sem},'${s.code}')"
+      title="${s.name} | ${s.hrs}h/wk | ${s.type}">
+      ${done?'✓ ':''}${getShort(s.name)}<span class="chrs">${s.hrs>0?'('+s.hrs+'h)':''}</span>
+      <button class="done-btn" onclick="toggleComplete('${cls}',${sem},'${s.code}',event)">${done?'✗':'✓'}</button>
+    </span>`;
+  });
+  html += `</div>`;
+
+  // Timetable grid
+  html += `<div class="tt-wrap"><table class="tt"><thead><tr>
+    <th>Day</th>`;
+  for(let h=1;h<=hrs;h++){
+    const t = times[h-1] || `H${h}`;
+    html += `<th>H${h}<br><span style="font-size:.55rem;opacity:.6;font-weight:400">${t}</span></th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  const DAY_ORDER = ['I','II','III','IV','V','VI'];
+  DAYS.forEach((day, di) => {
+    html += `<tr><td class="day-c" title="${day}"><span style="font-size:.65rem;color:var(--gray3);display:block;line-height:1">DAY</span>${DAY_ORDER[di]}</td>`;
+    for(let h=1;h<=hrs;h++){
+      const cell = getCellD(cls, sem, day, h);
+      if(cell){
+        const sub     = subs.find(s => s.code === cell.subCode);
+        const c       = DCOL[sub ? sub.dept : 'other'] || DCOL.other;
+        const done    = compSet.has(cell.subCode);
+        const clashes = findClash(cell.faculty, day, h, cls);
+        const clashCls = clashes.length > 0 ? ' clash-cell' : '';
+        const tip  = clashes.length > 0
+          ? `⚠️ CLASH: ${cell.faculty} also in ${clashes.map(x=>x.cls).join(', ')} at ${day} H${h}`
+          : `${cell.subName} — ${cell.faculty}`;
+        const cellInfo = JSON.stringify({subName:cell.subName,subCode:cell.subCode,faculty:cell.faculty,cls,day,h,clashes}).replace(/'/g,"&#39;");
+        html += `<td><div class="fc${clashCls}" style="background:${c.bg};border:1.5px solid ${c.bdr};${done?'opacity:.6;':''}" title="${tip}" onclick="showCellDetail('${cellInfo.replace(/"/g,'&quot;')}')">
+          <div class="short" style="color:${c.txt}">${getShort(cell.subName)}</div>
+          <div class="fac-tag" style="color:${c.txt}">${cell.faculty}</div>
+          ${done?`<div class="done-tag">✓ Done</div>`:''}
+          <button class="del-btn" onclick="event.stopPropagation();removeCell('${cls}',${sem},'${day}',${h})">✕</button>
+        </div></td>`;
+      } else {
+        const isReady = !!(selectedSubs[`${cls}_${sem}`] && getActiveFac());
+        html += `<td><div class="ec${isReady?' ready':''}"
+          onclick="quickAssign('${cls}',${sem},'${day}',${h})"
+          title="${isReady?'Click to assign '+getShort((subs.find(s=>s.code===selectedSubs[`${cls}_${sem}`])||{name:''}).name):'Empty slot'}">
+          ${isReady?'✚':'+'}
+        </div></td>`;
+      }
+    }
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+// ============================================================
+// CHIP SELECT → AUTO ASSIGN
+// ============================================================
+function selChipFor(cls, sem, code){
+  const key = `${cls}_${sem}`;
+  // Toggle off if same chip clicked again
+  if(selectedSubs[key] === code){ selectedSubs[key] = ''; renderAll(); return; }
+  selectedSubs[key] = code;
+
+  const af = getActiveFac();
+  if(!af){
+    showHint('👆 Now select a faculty from the sidebar to auto-assign');
+    renderAll();
+    return;
+  }
+  autoAssignSubject(cls, sem, code, af.short);
+  // Clear chip selection after assigning
+  selectedSubs[key] = '';
+}
+
+function autoAssignSubject(cls, sem, subCode, facShort){
+  const subs = getSubjects(cls, sem);
+  const sub  = subs.find(s => s.code === subCode);
+  if(!sub){ renderAll(); return; }
+
+  const needed = sub.hrs;
+  if(needed <= 0){
+    showHint(`ℹ ${getShort(sub.name)} has variable hours — click cells manually`);
+    renderAll(); return;
+  }
+
+  const hrs = parseInt(document.getElementById('hoursSelect').value);
+  const data = ttData[ttKey(cls, sem)] || {};
+  const alreadyDone = Object.values(data).filter(c => c.subCode === subCode).length;
+  const remaining   = needed - alreadyDone;
+
+  if(remaining <= 0){
+    showHint(`✓ ${getShort(sub.name)} already has all ${needed} hours assigned!`);
+    renderAll(); return;
+  }
+
+  // Find available slots
+  const available = [];
+  DAYS.forEach(day => {
+    for(let h=1;h<=hrs;h++){
+      if(getCellD(cls, sem, day, h)) continue;
+      const clash = findClash(facShort, day, h, cls);
+      available.push({day, h, hasClash: clash.length > 0});
+    }
+  });
+
+  const noClash   = available.filter(s => !s.hasClash);
+  const withClash = available.filter(s =>  s.hasClash);
+
+  function spread(slots, count){
+    const result = [], usedDays = {};
+    for(const s of slots){ if(result.length>=count) break; if(!usedDays[s.day]){result.push(s);usedDays[s.day]=1;} }
+    for(const s of slots){ if(result.length>=count) break; if(!result.includes(s)) result.push(s); }
+    return result;
+  }
+
+  let toAssign = spread(noClash, remaining);
+  if(toAssign.length < remaining){
+    const extra = spread(withClash, remaining - toAssign.length);
+    if(extra.length > 0 && confirm(`⚠️ Only ${toAssign.length} clash-free slots.\nAssign ${extra.length} more with clash?`)){
+      toAssign = [...toAssign, ...extra];
+    }
+  }
+
+  if(toAssign.length === 0){
+    showHint(`⚠️ No empty slots available for ${getShort(sub.name)}!`);
+    renderAll(); return;
+  }
+
+  toAssign.forEach(({day, h}) => {
+    setCellD(cls, sem, day, h, {subCode, subName: sub.name, faculty: facShort});
+  });
+
+  const msg = toAssign.length < remaining
+    ? `⚡ Assigned ${toAssign.length}/${needed}h for ${getShort(sub.name)} (${remaining-toAssign.length} slots unavailable)`
+    : `✅ Auto-assigned all ${toAssign.length}h for ${getShort(sub.name)} → ${facShort}`;
+  showHint(msg);
+  renderAll();
+}
+
+// ============================================================
+// QUICK ASSIGN (click empty cell)
+// ============================================================
+function quickAssign(cls, sem, day, h){
+  const selCode = selectedSubs[`${cls}_${sem}`];
+  const af      = getActiveFac();
+
+  if(!selCode || !af){
+    if(!selCode && !af) showHint('👆 Select a subject chip AND a faculty first');
+    else if(!selCode)   showHint('👆 Select a subject chip first');
+    else                showHint('👆 Select a faculty member first (sidebar)');
+    openModal(cls, sem, day, h);
+    return;
+  }
+
+  const subs = getSubjects(cls, sem);
+  const sub  = subs.find(s => s.code === selCode);
+  if(!sub){ openModal(cls, sem, day, h); return; }
+
+  const clashes = findClash(af.short, day, h, cls);
+  if(clashes.length > 0){
+    const list = clashes.map(c=>`${c.cls} (${getShort(c.subName)})`).join(', ');
+    if(!confirm(`⚠️ CLASH!\n\n${af.short} is already at ${day} H${h} in:\n${list}\n\nForce assign?`)) return;
+  }
+
+  setCellD(cls, sem, day, h, {subCode: selCode, subName: sub.name, faculty: af.short});
+  renderAll();
+}
+
+function removeCell(cls, sem, day, h){
+  delCellD(cls, sem, day, h);
+  renderAll();
+}
+
+// ============================================================
+// COMPLETE TOGGLE
+// ============================================================
+function toggleComplete(cls, sem, code, e){
+  e && e.stopPropagation();
+  const k = `${cls}_${sem}`;
+  if(!completedSubs[k]) completedSubs[k] = new Set();
+  if(completedSubs[k].has(code)) completedSubs[k].delete(code);
+  else completedSubs[k].add(code);
+  renderAll();
+}
+
+// ============================================================
+// MODAL (fallback)
+// ============================================================
+function openModal(cls, sem, day, h){
+  const subs = getSubjects(cls, sem);
+  pendingCell = {cls, sem, day, h};
+
+  document.getElementById('modalTitle').textContent = `Assign: ${cls} · ${day} · H${h}`;
+  document.getElementById('modalFac').innerHTML =
+    '<option value="">— Select Faculty —</option>' +
+    FACULTY.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+  document.getElementById('modalSub').innerHTML =
+    '<option value="">— Select Subject —</option>' +
+    subs.map(s => `<option value="${s.code}">${getShort(s.name)} — ${s.name}</option>`).join('');
+
+  // Pre-select if active
+  const af = getActiveFac();
+  if(af) document.getElementById('modalFac').value = af.short;
+  const sel = selectedSubs[`${cls}_${sem}`];
+  if(sel) document.getElementById('modalSub').value = sel;
+
+  document.getElementById('cellModal').classList.add('open');
+}
+
+function applyModal(){
+  if(!pendingCell) return;
+  const {cls, sem, day, h} = pendingCell;
+  const facShort = document.getElementById('modalFac').value;
+  const subCode  = document.getElementById('modalSub').value;
+  if(!facShort || !subCode){ showHint('⚠️ Select both faculty and subject'); return; }
+  const sub = getSubjects(cls, sem).find(s => s.code === subCode);
+  if(!sub) return;
+  setCellD(cls, sem, day, h, {subCode, subName: sub.name, faculty: facShort});
+  closeModal();
+  renderAll();
+}
+
+function closeModal(){
+  document.getElementById('cellModal').classList.remove('open');
+  pendingCell = null;
+}
+
+// ============================================================
+// FACULTY BAR
+// ============================================================
+function renderFacBar(){
+  const grid     = document.getElementById('facBarGrid');
+  const totalEl  = document.getElementById('facBarTotal');
+  const hrs_     = parseInt(document.getElementById('hoursSelect').value);
+  let grandTotal = 0;
+
+  grid.innerHTML = FACULTY.map(f => {
+    const total = getTotalHrs(f.short);
+    grandTotal += total;
+
+    // Count clashes
+    let clashCount = 0;
+    DAYS.forEach(day => {
+      for(let h=1;h<=hrs_;h++){
+        const clsWithFac = CLASSES.filter(cls => {
+          const sem = getSem(cls); if(!sem) return false;
+          const c = getCellD(cls, sem, day, h);
+          return c && c.faculty === f.short;
+        });
+        if(clsWithFac.length > 1) clashCount++;
+      }
+    });
+
+    // Per-class breakdown
+    let rows = '';
+    CLASSES.forEach(cls => {
+      const sem = getSem(cls); if(!sem) return;
+      const clsData = ttData[ttKey(cls,sem)] || {};
+      const subMap  = {};
+      Object.values(clsData).forEach(c => {
+        if(c.faculty !== f.short) return;
+        if(!subMap[c.subCode]) subMap[c.subCode] = {name: c.subName, count: 0};
+        subMap[c.subCode].count++;
+      });
+      const entries = Object.values(subMap);
+      if(!entries.length) return;
+      const subs    = getSubjects(cls, sem);
+      const subsHtml = Object.entries(subMap).map(([code, e]) => {
+        const sub = subs.find(s => s.code === code);
+        const col = DCOL[sub ? sub.dept : 'other'] || DCOL.other;
+        return `<span class="fbc-row">
+          <span class="fbc-dot" style="background:${col.bdr}"></span>
+          <span class="fbc-sub">${getShort(e.name)}<span class="fbc-cnt">${e.count}×</span></span>
+        </span>`;
+      }).join('');
+      const clsTotal = getClsHrs(f.short, cls);
+      rows += `<div style="margin-bottom:2px">
+        <span style="font-size:.62rem;font-weight:700;color:var(--navy)">${cls} <span style="color:var(--teal);font-family:'DM Mono',monospace">(${clsTotal}h)</span></span>
+        <div class="fbc-rows" style="margin-top:2px">${subsHtml}</div>
+      </div>`;
+    });
+
+    return `<div class="fbc${total>0?' has-hrs':''}${clashCount>0?' clash':''}">
+      <div class="fbc-top">
+        <span class="fbc-name">${f.short}</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          ${clashCount>0?`<span style="background:var(--red);color:#fff;border-radius:8px;padding:1px 6px;font-size:.6rem;font-weight:800">⚠️ ${clashCount}</span>`:''}
+          <span class="fbc-total">${total}h</span>
+        </div>
+      </div>
+      ${rows || '<div class="fbc-empty">No slots assigned</div>'}
+    </div>`;
+  }).join('');
+
+  totalEl.textContent = `— ${grandTotal} total slots assigned`;
+}
+
+// ============================================================
+// HINT TOAST
+// ============================================================
+let hintTimer;
+function showHint(msg){
+  const el = document.getElementById('hint');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { el.style.display='none'; }, 3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// ============================================================
+// BACKEND API — Save / Load (MySQL via PHP)
+// ============================================================
+const API_TT = 'api/timetable.php';
+const CLASSES_LIST = ['I B.Sc','II B.Sc','III B.Sc','I M.Sc','II M.Sc'];
+const CLASS_PROG_MAP = {'I B.Sc':'UG','II B.Sc':'UG','III B.Sc':'UG','I M.Sc':'PG','II M.Sc':'PG'};
+
+function setStatus(id, msg, color='var(--teal)') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.color = color;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 4500);
+}
+
+async function saveToDB() {
+  if (!currentOE) { showHint('⚠️ Select Odd/Even semester first'); return; }
+  setStatus('saveStatus','⏳ Saving...','var(--gray3)');
+  const semType = currentOE === 'odd' ? 'Odd' : 'Even';
+  let saved = 0, errors = 0;
+
+  for (const cls of CLASSES_LIST) {
+    const sem = getSem(cls); if (!sem) continue;
+    const data = ttData[ttKey(cls, sem)];
+    if (!data || Object.keys(data).length === 0) continue;
+    const facData = FACULTY.map(f => ({ name: f.name, short: f.short }));
+    try {
+      const res = await fetch(API_TT, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          programme: CLASS_PROG_MAP[cls],
+          class_name: cls,
+          sem_type: semType,
+          tt_data: data,
+          faculty_list: facData,
+          completed_subs: Array.from(completedSubs[`${cls}_${sem}`] || []),
+        })
+      });
+      const resp = await res.json();
+      if (resp.success) saved++; else errors++;
+    } catch(e) { errors++; console.error('Save error', cls, e); }
+  }
+
+  if (saved > 0 && errors === 0) setStatus('saveStatus', `✅ Saved ${saved} class(es) to DB`, 'var(--green)');
+  else if (saved === 0) setStatus('saveStatus', '⚠️ Nothing to save — assign subjects first', '#c0392b');
+  else setStatus('saveStatus', `⚠️ Saved ${saved}, failed ${errors}`, 'var(--gold)');
+}
+
+async function loadFromDB() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  setStatus('saveStatus','⏳ Loading...','var(--gray3)');
+  const semType = currentOE === 'odd' ? 'Odd' : 'Even';
+  let loaded = 0;
+
+  for (const cls of CLASSES_LIST) {
+    const sem = getSem(cls); if (!sem) continue;
+    const prog = CLASS_PROG_MAP[cls];
+    try {
+      const params = new URLSearchParams({ prog, class: cls, sem_type: semType });
+      const res  = await fetch(`${API_TT}?${params}`);
+      const resp = await res.json();
+      if (resp.success && resp.data) {
+        const d = resp.data;
+        if (d.tt_data) { ttData[ttKey(cls, sem)] = d.tt_data; loaded++; }
+        if (d.faculty_list && FACULTY.length === 0) {
+          let ctr = 100;
+          d.faculty_list.forEach(f => {
+            if (!FACULTY.find(x => x.short === f.short))
+              FACULTY.push({ id:'F'+(ctr++), name:f.name, short:f.short });
+          });
+        }
+        if (d.completed_subs) completedSubs[`${cls}_${sem}`] = new Set(d.completed_subs);
+      }
+    } catch(e) { console.error('Load error', cls, e); }
+  }
+
+  renderFacList(); renderAll();
+  if (loaded > 0) {
+    setStatus('saveStatus', `✅ Loaded ${loaded} timetable(s)`, 'var(--teal)');
+    showHint(`✅ Loaded ${loaded} timetable(s) from database`);
+  } else {
+    setStatus('saveStatus', 'ℹ No saved data found in DB', 'var(--gray3)');
+    showHint('ℹ No saved timetable found for this semester');
+  }
+}
+
+function exportJSON() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  const blob = new Blob([JSON.stringify({
+    ttData, faculty: FACULTY,
+    completedSubs: Object.fromEntries(
+      Object.entries(completedSubs).map(([k,v])=>[k,Array.from(v)])
+    ),
+    exportedAt: new Date().toISOString(), semester: currentOE
+  }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cs_timetable_${currentOE}_${Date.now()}.json`;
+  a.click();
+  showHint('✅ JSON exported!');
+}
+
+// ============================================================
+// PDF HELPERS
+// ============================================================
+const SHIFT_TIMES_ODD  = ['8:30–9:20','9:20–10:10','10:10–11:00','11:10–12:00','12:00–12:50'];
+const SHIFT_TIMES_EVEN = ['1:00–1:50','1:50–2:40','2:40–3:30','3:40–4:30','4:30–5:20'];
+
+function getPeriodLabels() {
+  return currentOE === 'odd' ? SHIFT_TIMES_ODD : SHIFT_TIMES_EVEN;
+}
+
+function pdfHeader(doc, title, subtitle) {
+  // Navy background header
+  doc.setFillColor(15, 35, 64);
+  doc.rect(0, 0, 297, 22, 'F');
+  doc.setFillColor(13, 125, 107);
+  doc.rect(0, 22, 297, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13); doc.setFont('helvetica','bold');
+  doc.text('ANNAMALAI UNIVERSITY — DEPARTMENT OF COMPUTER SCIENCE', 148.5, 9, {align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(title, 148.5, 16, {align:'center'});
+  doc.setFontSize(8);
+  doc.text(subtitle, 148.5, 21, {align:'center'});
+  doc.setTextColor(0, 0, 0);
+}
+
+function pdfFooter(doc, pageNum, total) {
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
+  doc.text('Annamalai University · CS Dept · Timetable Management System', 10, 205);
+  doc.text(`Page ${pageNum} of ${total}`, 287, 205, {align:'right'});
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-IN'), 148.5, 205, {align:'center'});
+  doc.setTextColor(0,0,0);
+}
+
+// ── Build timetable body rows for a class
+function buildTTRows(cls, sem) {
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const hrs = parseInt(document.getElementById('hoursSelect').value);
+  const data = ttData[ttKey(cls, sem)] || {};
+  const subs = getSubjects(cls, sem);
+  const subMap = {};
+  subs.forEach(s => subMap[s.code] = s);
+  const times = getPeriodLabels();
+
+  const DAY_ORDER_PDF = ['I','II','III','IV','V','VI'];
+  const rows = [];
+  days.forEach((day, di) => {
+    const row = [DAY_ORDER_PDF[di] + '\n' + day.substring(0,3)];
+    for (let h = 1; h <= hrs; h++) {
+      const cell = data[`${day}_${h}`];
+      if (cell) {
+        row.push(getShort(cell.subName) + '\n' + cell.faculty);
+      } else {
+        row.push('');
+      }
+    }
+    rows.push(row);
+  });
+  return rows;
+}
+
+function buildTTHead() {
+  const hrs = parseInt(document.getElementById('hoursSelect').value);
+  const times = getPeriodLabels();
+  const head = ['Day'];
+  for (let h = 1; h <= hrs; h++) {
+    head.push(`H${h}\n${times[h-1]||''}`);
+  }
+  return [head];
+}
+
+// ============================================================
+// PDF 1 — ALL CLASSES (one page per class)
+// ============================================================
+function pdfAllClasses() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const semType = currentOE === 'odd' ? 'Odd (1,3,5)' : 'Even (2,4,6)';
+  const shiftLabel = currentOE === 'odd' ? 'Shift I · Morning 8:30–12:50' : 'Shift II · Afternoon 1:00–5:20';
+  let first = true;
+
+  CLASSES_LIST.forEach(cls => {
+    const sem = getSem(cls); if (!sem) return;
+    const data = ttData[ttKey(cls, sem)];
+    if (!data || Object.keys(data).length === 0) return;
+
+    if (!first) doc.addPage('a4','landscape');
+    first = false;
+
+    pdfHeader(doc,
+      `Class Timetable — ${cls} | Semester ${sem} (${semType})`,
+      `${CLASS_PROG_MAP[cls]} · ${shiftLabel}`
+    );
+
+    const subs = getSubjects(cls, sem);
+    // Subject list
+    let subLine = subs.map(s => `${getShort(s.name)}(${s.hrs}h)`).join('  ·  ');
+    doc.setFontSize(7.5); doc.setTextColor(80,80,80);
+    doc.text('Subjects: ' + subLine, 10, 29);
+    doc.setTextColor(0,0,0);
+
+    doc.autoTable({
+      startY: 32,
+      head: buildTTHead(),
+      body: buildTTRows(cls, sem),
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 3, halign:'center', valign:'middle', minCellHeight: 12 },
+      headStyles: { fillColor:[13,125,107], textColor:255, fontStyle:'bold', fontSize:7.5, halign:'center' },
+      columnStyles: { 0:{ fillColor:[230,235,245], fontStyle:'bold', cellWidth:18, halign:'left' } },
+      alternateRowStyles: { fillColor:[248,248,252] },
+      didParseCell: (d) => {
+        if (d.section==='body' && d.cell.raw && d.cell.raw.includes('\n')) {
+          const [sub] = d.cell.raw.split('\n');
+          // Color code by subject type
+          const s = subs.find(x => getShort(x.name) === sub);
+          if (s) {
+            const colMap = {core:'#e8f7ef',lab:'#e8faf5',elective:'#eaf4ff',skill:'#fff3e0',tamil:'#f5eeff',english:'#fff5e6',foundation:'#f2f3f4'};
+            const c = colMap[s.dept];
+            if (c) { const rgb = hexToRgb(c); if(rgb) d.cell.styles.fillColor = rgb; }
+          }
+        }
+      },
+      margin: { left:8, right:8, bottom:15 },
+    });
+
+    pdfFooter(doc, doc.internal.pages.length - 1, '?');
+  });
+
+  if (first) { showHint('⚠️ No timetable data — assign subjects first'); return; }
+
+  // Fix page numbers
+  const totalPages = doc.internal.pages.length - 1;
+  doc.save(`CS_Timetable_All_Classes_${currentOE.toUpperCase()}.pdf`);
+  setStatus('pdfStatus', `✅ All Classes PDF saved`, 'var(--green)');
+}
+
+// ============================================================
+// PDF 2 — CLASS-WISE (each class detailed, A4 landscape)
+// ============================================================
+function pdfClassWise() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const semLabel = currentOE === 'odd' ? 'Odd Semester' : 'Even Semester';
+  let first = true;
+
+  CLASSES_LIST.forEach(cls => {
+    const sem = getSem(cls); if (!sem) return;
+    const data = ttData[ttKey(cls, sem)];
+    if (!data || Object.keys(data).length === 0) return;
+
+    if (!first) doc.addPage('a4','landscape');
+    first = false;
+
+    const prog = CLASS_PROG_MAP[cls];
+    const shiftLabel = currentOE==='odd' ? '☀ Shift I · 8:30 AM – 12:50 PM' : '🌙 Shift II · 1:00 PM – 5:20 PM';
+
+    pdfHeader(doc,
+      `${cls} — Semester ${sem} | ${semLabel}`,
+      `${prog} Programme · ${shiftLabel}`
+    );
+
+    const subs = getSubjects(cls, sem);
+
+    // Subject register box
+    let y = 30;
+    doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.setTextColor(15,35,64);
+    doc.text('SUBJECTS ASSIGNED:', 10, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+    const subTexts = subs.map(s => {
+      const facObj = FACULTY.find(f => {
+        const allCells = Object.values(data);
+        return allCells.some(c => c && c.faculty === f.short && c.subCode === s.code);
+      });
+      return `${getShort(s.name)} — ${s.name} (${s.hrs}h/wk)`;
+    });
+    const subStr = subTexts.join('   |   ');
+    doc.setFontSize(7);
+    const wrapped = doc.splitTextToSize(subStr, 275);
+    doc.text(wrapped, 10, y+4);
+    y += 4 + (wrapped.length * 3.5) + 2;
+
+    doc.autoTable({
+      startY: y + 2,
+      head: buildTTHead(),
+      body: buildTTRows(cls, sem),
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 4, halign:'center', valign:'middle', minCellHeight: 14 },
+      headStyles: { fillColor:[15,35,64], textColor:255, fontStyle:'bold', fontSize:8, halign:'center' },
+      columnStyles: { 0:{ fillColor:[240,244,252], fontStyle:'bold', cellWidth:20, halign:'left', fontSize:9 } },
+      alternateRowStyles: { fillColor:[250,250,255] },
+      didParseCell: (d) => {
+        if (d.section==='head' && d.column.index > 0) {
+          d.cell.styles.fillColor = [13,125,107];
+        }
+        if (d.section==='body' && d.cell.raw && d.cell.raw.includes('\n')) {
+          const [sub] = d.cell.raw.split('\n');
+          const s = subs.find(x => getShort(x.name) === sub);
+          if (s) {
+            const colMap = {core:[232,247,239],lab:[232,250,245],elective:[234,244,255],skill:[255,243,224],tamil:[245,238,255],english:[255,245,230],foundation:[242,243,244]};
+            const c = colMap[s.dept];
+            if (c) d.cell.styles.fillColor = c;
+          }
+        }
+      },
+      margin: { left:8, right:8, bottom:15 },
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 4;
+    // Legend
+    doc.setFontSize(7); doc.setTextColor(100,100,100);
+    doc.text('Legend: Core  Lab  Elective  Skill/SEC  Tamil/Lang  English  Foundation', 10, Math.min(finalY, 195));
+
+    pdfFooter(doc, doc.internal.pages.length - 1, CLASSES_LIST.length);
+  });
+
+  if (first) { showHint('⚠️ No timetable data — assign subjects first'); return; }
+  doc.save(`CS_Timetable_ClassWise_${currentOE.toUpperCase()}.pdf`);
+  setStatus('pdfStatus', '✅ Class-wise PDF saved', 'var(--green)');
+}
+
+// ============================================================
+// PDF 3 — FACULTY INDIVIDUAL REPORT (A4 portrait)
+// ============================================================
+function pdfFacultyReport() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  if (!FACULTY.length) { showHint('⚠️ No faculty added'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const semLabel = currentOE === 'odd' ? 'Odd Semester (1,3,5)' : 'Even Semester (2,4,6)';
+  const shiftLabel = currentOE==='odd' ? 'Shift I · 8:30–12:50' : 'Shift II · 1:00–5:20';
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const hrs = parseInt(document.getElementById('hoursSelect').value);
+  const times = getPeriodLabels();
+  let first = true;
+
+  FACULTY.forEach(fac => {
+    // Collect all assignments for this faculty
+    const assignments = [];
+    let totalSlots = 0;
+
+    CLASSES_LIST.forEach(cls => {
+      const sem = getSem(cls); if (!sem) return;
+      const data = ttData[ttKey(cls, sem)] || {};
+      Object.entries(data).forEach(([key, cell]) => {
+        if (!cell || cell.faculty !== fac.short) return;
+        const [day, hStr] = key.split('_');
+        assignments.push({ cls, day, h: parseInt(hStr), subName: cell.subName, subCode: cell.subCode });
+        totalSlots++;
+      });
+    });
+
+    if (totalSlots === 0) return; // Skip faculty with no assignments
+
+    if (!first) doc.addPage('a4','portrait');
+    first = false;
+
+    // Portrait header
+    doc.setFillColor(15, 35, 64);
+    doc.rect(0, 0, 210, 22, 'F');
+    doc.setFillColor(13, 125, 107);
+    doc.rect(0, 22, 210, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text('ANNAMALAI UNIVERSITY — DEPT. OF COMPUTER SCIENCE', 105, 9, {align:'center'});
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text(`Individual Faculty Timetable — ${semLabel}`, 105, 16, {align:'center'});
+    doc.setTextColor(0,0,0);
+
+    // Faculty info box
+    doc.setFillColor(240, 245, 255);
+    doc.rect(10, 28, 190, 22, 'F');
+    doc.setDrawColor(13, 125, 107);
+    doc.rect(10, 28, 190, 22, 'S');
+    doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(15,35,64);
+    doc.text(fac.name, 20, 37);
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+    doc.text(`${shiftLabel}   ·   Total: ${totalSlots} periods/week   ·   ${semLabel}`, 20, 44);
+    doc.setTextColor(0,0,0);
+
+    // Build timetable for this faculty only
+    const DAY_ORD = ['I','II','III','IV','V','VI'];
+    const facRows = [];
+    days.forEach((day, di) => {
+      const row = [DAY_ORD[di] + '\n' + day.substring(0,3)];
+      for (let h = 1; h <= hrs; h++) {
+        let found = null;
+        CLASSES_LIST.forEach(cls => {
+          const sem = getSem(cls); if (!sem) return;
+          const data = ttData[ttKey(cls, sem)] || {};
+          const cell = data[`${day}_${h}`];
+          if (cell && cell.faculty === fac.short) {
+            found = `${getShort(cell.subName)}\n[${cls}]`;
+          }
+        });
+        row.push(found || '—');
+      }
+      facRows.push(row);
+    });
+
+    const facHead = [['Day', ...Array.from({length:hrs},(_,i)=>`H${i+1}\n${times[i]||''}`)]];
+
+    doc.autoTable({
+      startY: 55,
+      head: facHead,
+      body: facRows,
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 4, halign:'center', valign:'middle', minCellHeight: 14 },
+      headStyles: { fillColor:[13,125,107], textColor:255, fontStyle:'bold', fontSize:8.5, halign:'center' },
+      columnStyles: { 0:{ fillColor:[240,244,252], fontStyle:'bold', cellWidth:22, halign:'left' } },
+      alternateRowStyles: { fillColor:[250,252,250] },
+      didParseCell: (d) => {
+        if (d.section==='body' && d.cell.raw && d.cell.raw !== '—') {
+          d.cell.styles.fillColor = [232, 247, 239];
+          d.cell.styles.textColor = [15, 60, 30];
+          d.cell.styles.fontStyle = 'bold';
+        }
+        if (d.section==='body' && d.cell.raw === '—') {
+          d.cell.styles.textColor = [180,180,180];
+        }
+      },
+      margin: { left:10, right:10, bottom:20 },
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 8;
+
+    // Subject summary table
+    const subSummary = {};
+    assignments.forEach(a => {
+      const k = a.subName + '|' + a.cls;
+      if (!subSummary[k]) subSummary[k] = { subName: a.subName, cls: a.cls, count: 0 };
+      subSummary[k].count++;
+    });
+
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(15,35,64);
+    doc.text('SUBJECT LOAD SUMMARY:', 10, finalY);
+
+    doc.autoTable({
+      startY: finalY + 4,
+      head: [['#', 'Subject', 'Class', 'Periods/Week']],
+      body: Object.values(subSummary).map((s,i) => [i+1, s.subName, s.cls, s.count + ' periods']),
+      theme: 'striped',
+      styles: { fontSize: 8.5, cellPadding: 3 },
+      headStyles: { fillColor:[15,35,64], textColor:255, fontStyle:'bold' },
+      columnStyles: { 0:{cellWidth:10,halign:'center'}, 3:{halign:'center'} },
+      margin: { left:10, right:10, bottom:20 },
+    });
+
+    // Footer
+    doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text('Annamalai University · CS Dept · Timetable Management System', 10, 287);
+    doc.text('Generated: ' + new Date().toLocaleDateString('en-IN'), 200, 287, {align:'right'});
+    doc.setTextColor(0,0,0);
+  });
+
+  if (first) { showHint('⚠️ No faculty have assignments yet'); return; }
+  doc.save(`CS_Faculty_Timetable_${currentOE.toUpperCase()}.pdf`);
+  setStatus('pdfStatus', '✅ Faculty Report PDF saved', 'var(--green)');
+}
+
+// ── Hex to RGB helper
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+
+// ============================================================
+// CELL DETAIL POPUP (click on filled cell)
+// ============================================================
+function showCellDetail(infoStr) {
+  let info;
+  try { info = JSON.parse(infoStr); } catch(e) { return; }
+  const DAY_ORD = ['I','II','III','IV','V','VI'];
+  const dayIdx  = DAYS.indexOf(info.day);
+  const dayLabel = dayIdx >= 0 ? `Day Order ${DAY_ORD[dayIdx]} (${info.day})` : info.day;
+  const times = currentOE === 'odd' ? SHIFT_TIMES_ODD : SHIFT_TIMES_EVEN;
+  const timeLabel = times[info.h - 1] || '';
+
+  let html = `
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <tr style="border-bottom:1px solid #eee"><td style="padding:6px 4px;color:#666;width:120px">📚 Subject</td>
+        <td style="padding:6px 4px;font-weight:700;color:var(--navy)">${info.subName}</td></tr>
+      <tr style="border-bottom:1px solid #eee"><td style="padding:6px 4px;color:#666">🔖 Code</td>
+        <td style="padding:6px 4px;font-family:monospace;color:var(--teal)">${info.subCode}</td></tr>
+      <tr style="border-bottom:1px solid #eee"><td style="padding:6px 4px;color:#666">👨‍🏫 Faculty</td>
+        <td style="padding:6px 4px;font-weight:700;color:var(--navy)">${info.faculty}</td></tr>
+      <tr style="border-bottom:1px solid #eee"><td style="padding:6px 4px;color:#666">🎓 Class</td>
+        <td style="padding:6px 4px">${info.cls}</td></tr>
+      <tr style="border-bottom:1px solid #eee"><td style="padding:6px 4px;color:#666">📅 Day</td>
+        <td style="padding:6px 4px">${dayLabel}</td></tr>
+      <tr><td style="padding:6px 4px;color:#666">⏰ Hour</td>
+        <td style="padding:6px 4px">H${info.h}${timeLabel ? ' &nbsp;('+timeLabel+')' : ''}</td></tr>
+    </table>`;
+
+  if (info.clashes && info.clashes.length > 0) {
+    html += `<div style="background:#fff5f5;border:1.5px solid var(--red);border-radius:8px;padding:10px;margin-top:12px;font-size:.82rem">
+      <strong style="color:var(--red)">⚠️ Schedule Clash Detected!</strong><br>
+      <em>${info.faculty}</em> is also assigned in <strong>${info.clashes.map(c=>c.cls).join(', ')}</strong> at the same time slot.
+    </div>`;
+  } else {
+    html += `<div style="background:#eafaf1;border:1px solid var(--green);border-radius:8px;padding:8px 10px;margin-top:12px;font-size:.8rem;color:var(--green)">
+      ✅ No scheduling conflicts for this slot.
+    </div>`;
+  }
+
+  document.getElementById('cellDetailBody').innerHTML = html;
+  document.getElementById('cellDetailModal').classList.add('open');
+}
+function closeCellDetail() { document.getElementById('cellDetailModal').classList.remove('open'); }
+
+// ============================================================
+// LAB REPORT
+// ============================================================
+function openLabReport() {
+  if (!currentOE) { showHint('⚠️ Select a semester first'); return; }
+  const DAY_ORD = ['I','II','III','IV','V','VI'];
+  const wrongAssigns = [];
+  const labSlots = [];
+
+  CLASSES.forEach(cls => {
+    const sem = getSem(cls); if (!sem) return;
+    const data = ttData[ttKey(cls,sem)] || {};
+    const subs = getSubjects(cls, sem);
+    Object.entries(data).forEach(([key, cell]) => {
+      const sub = subs.find(s => s.code === cell.subCode);
+      if (!sub || sub.type !== 'Lab') return;
+      const [day, hStr] = key.split('_');
+      const dayIdx = DAYS.indexOf(day);
+      const h = parseInt(hStr);
+      const clashes = findClash(cell.faculty, day, h, cls);
+      labSlots.push({ dayOrder: DAY_ORD[dayIdx]||'?', day, h, cls, subName: cell.subName, subCode: cell.subCode, faculty: cell.faculty, clash: clashes.length > 0, clashInfo: clashes });
+      if (clashes.length > 0) wrongAssigns.push({ dayOrder: DAY_ORD[dayIdx]||'?', day, h, cls, subName: cell.subName, faculty: cell.faculty, clashes });
+    });
+  });
+
+  // Show wrong assign popup first if clash issues found
+  if (wrongAssigns.length > 0) {
+    let wHtml = `<div style="font-weight:700;margin-bottom:8px">Found <span style="color:var(--red)">${wrongAssigns.length}</span> clash(es) in lab assignments. Please review and fix:</div>`;
+    wrongAssigns.forEach(w => {
+      wHtml += `<div style="background:#fff5f5;border:1px solid var(--red);border-radius:6px;padding:9px 12px;margin-bottom:7px;font-size:.83rem">
+        <strong>Day ${w.dayOrder} (${w.day})</strong> — Hour H${w.h} — Class: <strong>${w.cls}</strong><br>
+        📚 Subject: <em>${w.subName}</em><br>
+        👨‍🏫 Faculty: <em>${w.faculty}</em><br>
+        <span style="color:var(--red)">⚠ Also teaching: <strong>${w.clashes.map(c=>`${c.cls} (${getShort(c.subName)})`).join(', ')}</strong> at the same time!</span>
+      </div>`;
+    });
+    document.getElementById('wrongAssignBody').innerHTML = wHtml;
+    document.getElementById('wrongAssignModal').classList.add('open');
+    return; // Show wrong assign first; user can dismiss then re-open for full report
+  }
+
+  // Build report table
+  let html = `<div style="font-size:.78rem;color:#666;margin-bottom:14px;padding:8px 12px;background:#f0faf7;border-radius:8px;border:1px solid #b3ddd6">
+    ${currentOE === 'odd' ? '☀ Shift I — Odd Semester' : '🌙 Shift II — Even Semester'} &nbsp;|&nbsp;
+    Total Lab slots: <strong>${labSlots.length}</strong> &nbsp;
+    <span style="color:var(--green)">✅ No clashes detected</span>
+  </div>`;
+
+  if (labSlots.length === 0) {
+    html += `<div style="text-align:center;color:#888;padding:30px;font-size:.9rem">No lab subjects assigned yet in this semester.</div>`;
+  } else {
+    const byDay = {};
+    DAY_ORD.forEach(d => byDay[d] = []);
+    labSlots.forEach(s => { if(byDay[s.dayOrder]) byDay[s.dayOrder].push(s); });
+
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead><tr style="background:var(--navy);color:#fff">
+        <th style="padding:8px 10px;text-align:left">Day Order</th>
+        <th style="padding:8px 10px;text-align:left">Hour</th>
+        <th style="padding:8px 10px;text-align:left">Class</th>
+        <th style="padding:8px 10px;text-align:left">Lab Subject</th>
+        <th style="padding:8px 10px;text-align:left">Faculty</th>
+        <th style="padding:8px 10px;text-align:center">Status</th>
+      </tr></thead><tbody>`;
+
+    let rc = 0;
+    DAY_ORD.forEach(d => {
+      (byDay[d]||[]).sort((a,b)=>a.h-b.h).forEach(s => {
+        const bg = rc++ % 2 === 0 ? '#fff' : '#f9fcfb';
+        const statusHtml = s.clash
+          ? `<span style="background:#ffeaea;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">⚠ CLASH</span>`
+          : `<span style="background:#eafaf1;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">✓ OK</span>`;
+        html += `<tr style="background:${bg};border-bottom:1px solid #eee">
+          <td style="padding:7px 10px;font-weight:700;color:var(--navy)">Day ${d}</td>
+          <td style="padding:7px 10px;font-family:monospace;color:var(--teal2)">H${s.h}</td>
+          <td style="padding:7px 10px">${s.cls}</td>
+          <td style="padding:7px 10px;color:var(--teal2);font-weight:600">${s.subName}</td>
+          <td style="padding:7px 10px">${s.faculty}</td>
+          <td style="padding:7px 10px;text-align:center">${statusHtml}</td>
+        </tr>`;
+        if (s.clash) {
+          html += `<tr style="background:#fff8f8">
+            <td colspan="6" style="padding:3px 10px 7px 24px;font-size:.75rem;color:var(--red)">
+              ↳ ⚠ Clash: ${s.faculty} also in <strong>${s.clashInfo.map(c=>c.cls).join(', ')}</strong> at same slot
+            </td></tr>`;
+        }
+      });
+    });
+    html += `</tbody></table>`;
+  }
+
+  document.getElementById('labReportBody').innerHTML = html;
+  document.getElementById('labReportModal').classList.add('open');
+}
+
+function closeLabReport() { document.getElementById('labReportModal').classList.remove('open'); }
+function closeWrongAssign() { document.getElementById('wrongAssignModal').classList.remove('open'); }
+
+async function pdfLabReport() {
+  if (!window.jspdf) { showHint('⚠️ jsPDF not loaded'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const DAY_ORD = ['I','II','III','IV','V','VI'];
+  const semLabel  = currentOE === 'odd' ? 'Odd Semester' : 'Even Semester';
+  const shiftLabel = currentOE === 'odd' ? 'Shift I · 8:30–12:50' : 'Shift II · 1:00–5:20';
+
+  const labSlots = [];
+  CLASSES.forEach(cls => {
+    const sem = getSem(cls); if (!sem) return;
+    const data = ttData[ttKey(cls,sem)] || {};
+    const subs = getSubjects(cls, sem);
+    Object.entries(data).forEach(([key, cell]) => {
+      const sub = subs.find(s => s.code === cell.subCode);
+      if (!sub || sub.type !== 'Lab') return;
+      const [day, hStr] = key.split('_');
+      const dayIdx = DAYS.indexOf(day);
+      const h = parseInt(hStr);
+      const clashes = findClash(cell.faculty, day, h, cls);
+      labSlots.push([DAY_ORD[dayIdx]||'?', day, `H${h}`, cls, cell.subName, cell.faculty, clashes.length>0?'CLASH':'OK']);
+    });
+  });
+
+  // Sort by day order
+  const dIdx = d => (['I','II','III','IV','V','VI'].indexOf(d));
+  labSlots.sort((a,b) => dIdx(a[0]) - dIdx(b[0]) || a[2].localeCompare(b[2]));
+
+  doc.setFillColor(15,35,64); doc.rect(0,0,297,22,'F');
+  doc.setFillColor(13,125,107); doc.rect(0,22,297,3,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(13); doc.setFont('helvetica','bold');
+  doc.text('ANNAMALAI UNIVERSITY — DEPARTMENT OF COMPUTER SCIENCE', 148.5, 9, {align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(`Laboratory Timetable Report — ${semLabel} · ${shiftLabel}`, 148.5, 16, {align:'center'});
+  doc.setTextColor(0,0,0);
+
+  if (labSlots.length === 0) {
+    doc.setFontSize(11); doc.text('No lab subjects assigned yet.', 148.5, 100, {align:'center'});
+  } else {
+    doc.autoTable({
+      startY: 30,
+      head: [['Day Order','Day','Hour','Class','Lab Subject','Faculty','Status']],
+      body: labSlots,
+      theme: 'grid',
+      styles: { fontSize:9, cellPadding:4, valign:'middle' },
+      headStyles: { fillColor:[13,125,107], textColor:255, fontStyle:'bold' },
+      columnStyles: {
+        0:{cellWidth:22, halign:'center', fontStyle:'bold'},
+        1:{cellWidth:22},
+        2:{cellWidth:16, halign:'center'},
+        3:{cellWidth:28},
+        6:{cellWidth:22, halign:'center'}
+      },
+      didParseCell: (d) => {
+        if (d.section==='body' && d.column.index===6) {
+          if (d.cell.raw==='CLASH') { d.cell.styles.textColor=[192,57,43]; d.cell.styles.fontStyle='bold'; d.cell.styles.fillColor=[255,235,235]; }
+          else { d.cell.styles.textColor=[26,122,74]; d.cell.styles.fontStyle='bold'; }
+        }
+      },
+      alternateRowStyles: { fillColor:[248,252,250] },
+      margin: { left:10, right:10, bottom:20 }
+    });
+  }
+
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
+  doc.text('Annamalai University · CS Dept · Laboratory Timetable Report', 10, 205);
+  doc.text('Generated: '+new Date().toLocaleDateString('en-IN'), 287, 205, {align:'right'});
+  doc.save(`CS_Lab_Timetable_${currentOE.toUpperCase()}.pdf`);
+  setStatus('pdfStatus','✅ Lab Report PDF saved','var(--green)');
+}
+
+renderFacList();
+loadFacultyFromAPI(); // Auto-load faculty from database
+</script>
+</body>
+</html>

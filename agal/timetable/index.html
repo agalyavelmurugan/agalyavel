@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CS Timetable – Annamalai University</title>
+<style>
+:root{
+  --bg:#f0f4ff;--surface:#ffffff;--card:#ffffff;
+  --border:#d1daf5;--accent:#5b8dee;--accent2:#8b5cf6;
+  --green:#10b981;--orange:#f59e0b;--red:#ef4444;
+  --teal:#06b6d4;--pink:#ec4899;
+  --text:#1e293b;--muted:#64748b;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sb{width:238px;background:var(--surface);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50}
+.sb-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-icon-box{width:38px;height:38px;background:linear-gradient(135deg,var(--accent2),var(--accent));
+             border-radius:10px;display:flex;align-items:center;justify-content:center;
+             font-size:1.2rem;flex-shrink:0}
+.sb-texts .t1{font-weight:800;font-size:.95rem}
+.sb-texts .t2{font-size:.67rem;color:var(--muted)}
+.sb-nav{padding:12px 8px;flex:1;display:flex;flex-direction:column;gap:2px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
+         cursor:pointer;font-size:.86rem;font-weight:500;color:var(--muted);
+         border:none;background:none;width:100%;text-align:left;transition:all .15s}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-btn.active{color:var(--accent);background:linear-gradient(135deg,rgba(91,141,238,.12),rgba(139,92,246,.12));
+                border:1px solid rgba(91,141,238,.3)}
+.nav-btn .ni{font-size:1.05rem;width:20px;text-align:center;flex-shrink:0}
+.nav-btn .nbadge{margin-left:auto;background:var(--accent);color:#fff;
+                  font-size:.63rem;font-weight:700;padding:1px 6px;
+                  border-radius:9px;min-width:20px;text-align:center}
+.sb-foot{padding:12px;border-top:1px solid var(--border);
+         font-size:.7rem;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ── MAIN ── */
+.main{margin-left:238px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+        padding:0 26px;height:58px;display:flex;align-items:center;
+        justify-content:space-between;position:sticky;top:0;z-index:40}
+.tb-left{font-size:.98rem;font-weight:700}
+.tb-right{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--muted)}
+.live{width:8px;height:8px;border-radius:50%;background:var(--green);
+      animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}
+                  60%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+.body{padding:24px 26px;flex:1}
+.page{display:none}.page.active{display:block}
+
+/* ── STAT CARDS ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:17px 15px;position:relative;overflow:hidden;
+    transition:transform .18s,border-color .18s;cursor:default}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--glow)}
+.sc:hover{transform:translateY(-2px);border-color:rgba(91,141,238,.4)}
+.sc .i{font-size:1.6rem;margin-bottom:7px}
+.sc .v{font-size:1.9rem;font-weight:900;line-height:1;margin-bottom:3px}
+.sc .l{font-size:.74rem;color:var(--muted)}
+
+/* ── SECTION HDR ── */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.st{font-size:.97rem;font-weight:700;display:flex;align-items:center;gap:7px}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;padding:2px 8px;
+      border-radius:20px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.cb{background:rgba(91,141,238,.14);color:var(--accent)}
+.cp{background:rgba(139,92,246,.14);color:var(--accent2)}
+.cg{background:rgba(16,185,129,.14);color:var(--green)}
+.co{background:rgba(245,158,11,.14);color:var(--orange)}
+.cr{background:rgba(239,68,68,.14);color:var(--red)}
+.ct{background:rgba(6,182,212,.14);color:var(--teal)}
+
+/* ── TABLE ── */
+.tw{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbar{display:flex;align-items:center;gap:8px;padding:11px 15px;
+      border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tbar input,.tbar select{background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;padding:7px 11px;color:var(--text);font-size:.81rem;transition:border-color .18s}
+.tbar input{min-width:195px}.tbar input:focus,.tbar select:focus{outline:none;border-color:var(--accent)}
+.tbar select option{background:var(--card)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#f1f5ff}
+th{padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);
+   text-transform:uppercase;letter-spacing:.06em;text-align:left;white-space:nowrap}
+td{padding:11px 13px;font-size:.83rem;border-top:1px solid var(--border);vertical-align:middle}
+tbody tr:hover td{background:rgba(91,141,238,.04)}
+
+/* ── HOUR BAR ── */
+.hb{height:5px;border-radius:3px;background:rgba(0,0,0,.08);width:75px;overflow:hidden;margin-top:3px}
+.hf{height:100%;border-radius:3px;transition:width .5s}
+
+/* ── AVATAR ── */
+.av{width:30px;height:30px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.68rem;color:#fff;flex-shrink:0}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;
+     border-radius:7px;border:none;cursor:pointer;font-size:.81rem;
+     font-weight:600;transition:all .15s;white-space:nowrap;line-height:1}
+.bp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 2px 10px rgba(91,141,238,.28)}
+.bp:hover{filter:brightness(1.1);box-shadow:0 4px 18px rgba(91,141,238,.42)}
+.bg{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
+.bg:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.bd{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.bd:hover{background:rgba(239,68,68,.16)}
+.bsm{padding:4px 9px;font-size:.74rem;border-radius:6px}
+.btt{background:linear-gradient(135deg,var(--accent2),var(--pink));color:#fff;
+     padding:13px 32px;font-size:.95rem;border-radius:11px;
+     box-shadow:0 4px 18px rgba(139,92,246,.32)}
+.btt:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 8px 26px rgba(139,92,246,.48)}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+    z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.ov.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:17px;
+       padding:24px;width:490px;max-width:95vw;max-height:90vh;
+       overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mh h3{font-size:.97rem;font-weight:700}
+.mx{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;
+    width:29px;height:29px;cursor:pointer;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .15s}
+.mx:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+.fr{margin-bottom:12px}
+.fr label{display:block;font-size:.71rem;font-weight:700;color:var(--muted);
+           text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.fr input,.fr select,.fr textarea{width:100%;background:var(--surface);
+  border:1px solid var(--border);border-radius:7px;padding:8px 11px;
+  color:var(--text);font-size:.84rem;transition:border-color .18s}
+.fr input:focus,.fr select:focus,.fr textarea:focus{outline:none;border-color:var(--accent)}
+.fr select option{background:var(--card)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf{display:flex;gap:9px;justify-content:flex-end;
+    margin-top:18px;padding-top:15px;border-top:1px solid var(--border)}
+
+/* ── CLASS CARDS ── */
+.cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:13px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:15px;transition:all .18s}
+.cc:hover{border-color:rgba(91,141,238,.38);transform:translateY(-1px)}
+.cc .cn{font-weight:800;font-size:.93rem;margin-bottom:4px}
+.cc .cpr{margin-bottom:9px;display:flex;gap:5px;flex-wrap:wrap}
+.sr{display:flex;justify-content:space-between;align-items:center;
+    padding:6px 0;font-size:.79rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;
+     margin-right:4px;vertical-align:middle;flex-shrink:0}
+.dg{background:var(--green);box-shadow:0 0 5px rgba(16,185,129,.5)}
+.dx{background:var(--border)}
+
+/* ── TT HERO ── */
+.hero{background:linear-gradient(135deg,rgba(91,141,238,.07),rgba(139,92,246,.09));
+      border:1px solid rgba(91,141,238,.18);border-radius:17px;
+      padding:42px 36px;text-align:center;margin-bottom:26px}
+.hero h2{font-size:1.6rem;font-weight:800;margin-bottom:7px;
+         background:linear-gradient(135deg,var(--accent),var(--accent2));
+         -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--muted);font-size:.91rem;margin-bottom:24px;line-height:1.65}
+
+/* ── ALERTS ── */
+.alert{padding:10px 14px;border-radius:8px;font-size:.82rem;
+       margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.aok{background:rgba(16,185,129,.09);border:1px solid rgba(16,185,129,.27);color:#6ee7b7}
+.aer{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.27);color:#fca5a5}
+
+/* ── DASH FAC ROWS ── */
+.fr-card{display:flex;align-items:center;gap:11px;padding:11px 15px;
+         border-bottom:1px solid var(--border);transition:background .13s}
+.fr-card:hover{background:rgba(91,141,238,.04)}
+.fr-card:last-child{border-bottom:none}
+.fi{flex:1;min-width:0}
+.fn{font-weight:600;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fd{font-size:.71rem;color:var(--muted)}
+.fh{text-align:right;flex-shrink:0}
+.fht{font-size:.74rem;color:var(--muted);white-space:nowrap}
+
+.sp{display:inline-block;width:14px;height:14px;border:2px solid var(--border);
+    border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{color:var(--muted);font-size:.83rem;padding:26px;text-align:center}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ════ SIDEBAR ════ -->
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <div class="sb-icon-box">🗓</div>
+      <div class="sb-texts">
+        <div class="t1">CS Timetable</div>
+        <div class="t2">Annamalai University</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <button class="nav-btn active" onclick="goPage('dashboard',this)">
+      <span class="ni">📊</span> Dashboard
+    </button>
+    <button class="nav-btn" onclick="goPage('faculty',this)">
+      <span class="ni">👨‍🏫</span> Faculty
+      <span class="nbadge" id="nb-fac">–</span>
+    </button>
+    <button class="nav-btn" onclick="goPage('subjects',this)">
+      <span class="ni">📚</span> Subjects
+      <span class="nbadge" id="nb-sub">–</span>
+    </button>
+    <button class="nav-btn" onclick="goPage('timetable',this)">
+      <span class="ni">📋</span> Timetable
+      <span class="nbadge" id="nb-tt">–</span>
+    </button>
+    <button class="nav-btn" onclick="goPage('staff',this)">
+      <span class="ni">🧑‍💼</span> Staff Timetable
+    </button>
+    <button class="nav-btn" onclick="goPage('workload',this)">
+      <span class="ni">📊</span> Workload Report
+    </button>
+  </nav>
+  <div class="sb-foot">Dept. of Computer Science<br/>Annamalai University</div>
+</aside>
+
+<!-- ════ MAIN ════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left" id="pg-title">📊 Dashboard</div>
+    <div class="tb-right">
+      <span class="live"></span>
+      <span id="sync-lbl">Connecting…</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="sg">
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent),var(--teal))">
+          <div class="i">👨‍🏫</div><div class="v" id="sc-fac">–</div><div class="l">Faculty Members</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent2),var(--pink))">
+          <div class="i">📚</div><div class="v" id="sc-sub">–</div><div class="l">Total Subjects</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent),var(--accent2))">
+          <div class="i">🎓</div><div class="v" id="sc-ug">–</div><div class="l">UG Subjects</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent2),var(--teal))">
+          <div class="i">🏛️</div><div class="v" id="sc-pg">–</div><div class="l">PG Subjects</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--orange),var(--red))">
+          <div class="i">🔬</div><div class="v" id="sc-lab">–</div><div class="l">Lab Subjects</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--teal),var(--green))">
+          <div class="i">📖</div><div class="v" id="sc-th">–</div><div class="l">Theory Subjects</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--green),var(--teal))">
+          <div class="i">📋</div><div class="v" id="sc-tt">–</div><div class="l">Saved Timetables</div>
+        </div>
+      </div>
+
+      <div class="sh">
+        <div class="st">👨‍🏫 Faculty Load Summary</div>
+      </div>
+      <div class="tw" style="margin-bottom:22px" id="dash-fac">
+        <div class="empty"><span class="sp"></span> Loading…</div>
+      </div>
+
+      <div class="sh">
+        <div class="st">📋 Class-wise Timetable Status</div>
+      </div>
+      <div class="cg-grid" id="dash-cls">
+        <div class="empty"><span class="sp"></span></div>
+      </div>
+    </div>
+
+    <!-- ══ FACULTY ══ -->
+    <div class="page" id="page-faculty">
+      <div id="fac-alert"></div>
+      <div class="tw">
+        <div class="tbar">
+          <input type="text" id="fac-q"
+            placeholder="🔍 Search name, designation, specialization…"
+            oninput="renderFac()"/>
+          <div style="margin-left:auto">
+            <button class="btn bp" onclick="openFM()">＋ Add Faculty</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Faculty</th><th>Designation</th><th>Specialization</th>
+            <th>Max</th><th>Assigned</th><th>Load</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="fac-tb">
+            <tr><td colspan="9" class="empty"><span class="sp"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SUBJECTS ══ -->
+    <div class="page" id="page-subjects">
+      <div id="sub-alert"></div>
+      <div class="tw">
+        <div class="tbar">
+          <input type="text" id="sub-q"
+            placeholder="🔍 Search name, code, faculty…"
+            oninput="renderSub()"/>
+          <select id="sf-p" onchange="loadSub()">
+            <option value="">All Programmes</option>
+            <option value="UG">UG</option><option value="PG">PG</option>
+          </select>
+          <select id="sf-s" onchange="loadSub()">
+            <option value="">All Semesters</option>
+            <option>I</option><option>II</option><option>III</option>
+            <option>IV</option><option>V</option><option>VI</option>
+          </select>
+          <select id="sf-st" onchange="loadSub()">
+            <option value="">Odd & Even</option>
+            <option value="Odd">Odd</option><option value="Even">Even</option>
+          </select>
+          <select id="sf-t" onchange="loadSub()">
+            <option value="">All Types</option>
+            <option value="Theory">Theory</option><option value="Lab">Lab</option>
+          </select>
+          <div style="margin-left:auto">
+            <button class="btn bp" onclick="openSM()">＋ Add Subject</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Subject Name</th><th>Code</th><th>Prog</th>
+            <th>Semester</th><th>Type</th><th>Hrs/Wk</th><th>Faculty</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="sub-tb">
+            <tr><td colspan="9" class="empty"><span class="sp"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TIMETABLE ══ -->
+    <div class="page" id="page-timetable">
+      <div class="hero">
+        <div style="font-size:3rem;margin-bottom:11px">🗓️</div>
+        <h2>Class Timetable Builder</h2>
+        <p>Click below to open the full timetable builder in a new tab.<br/>
+           All subject allocations are stored automatically in the database.</p>
+        <button class="btn btt" onclick="openTT()">🚀 Open Timetable Builder</button>
+      </div>
+      <div class="sh">
+        <div class="st">💾 Saved Timetables
+          <span class="chip cg" id="tt-chip">–</span>
+        </div>
+        <button class="btn bg bsm" onclick="loadTT()">↻ Refresh</button>
+      </div>
+      <div class="cg-grid" id="tt-grid">
+        <div class="empty"><span class="sp"></span></div>
+      </div>
+    </div>
+
+    <!-- ══ STAFF TIMETABLE ══ -->
+    <div class="page" id="page-staff">
+      <div id="staff-alert"></div>
+      <div class="tw" style="margin-bottom:20px">
+        <div class="tbar" style="gap:12px;padding:14px 16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Select Faculty</label>
+            <select id="staff-fac-sel" onchange="loadStaffTT()" style="min-width:220px">
+              <option value="">— Choose Faculty —</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Semester Type</label>
+            <select id="staff-oe-sel" onchange="loadStaffTT()">
+              <option value="Odd">Odd Semester (Shift I)</option>
+              <option value="Even">Even Semester (Shift II)</option>
+            </select>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:flex-end">
+            <button class="btn bg bsm" onclick="loadStaffTT()">↻ Refresh</button>
+          </div>
+        </div>
+      </div>
+      <div id="staff-tt-wrap">
+        <div class="empty" style="padding:60px;text-align:center;color:var(--muted);font-size:.9rem">
+          👆 Select a faculty member above to view their timetable
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WORKLOAD REPORT ══ -->
+    <div class="page" id="page-workload">
+      <div id="wl-alert"></div>
+
+      <!-- Controls bar -->
+      <div class="tw" style="margin-bottom:18px">
+        <div class="tbar" style="gap:12px;padding:14px 16px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Semester Type</label>
+            <select id="wl-sem-sel" onchange="loadWorkload()" style="min-width:180px">
+              <option value="Odd">Odd Semester (Shift I)</option>
+              <option value="Even">Even Semester (Shift II)</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Filter Faculty</label>
+            <input type="text" id="wl-search" placeholder="🔍 Search faculty…" oninput="filterWorkload()" style="min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:.81rem"/>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:flex-end;gap:8px">
+            <button class="btn bg bsm" onclick="loadWorkload()">↻ Refresh</button>
+            <button class="btn bp bsm" onclick="exportWorkloadPDF()">📥 PDF Report</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary stat cards -->
+      <div class="sg" id="wl-stats" style="margin-bottom:18px">
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent),var(--teal))">
+          <div class="i">👨‍🏫</div><div class="v" id="wl-sc-total">–</div><div class="l">Total Faculty</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--green),var(--teal))">
+          <div class="i">✅</div><div class="v" id="wl-sc-normal">–</div><div class="l">Normal Load</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--orange),var(--red))">
+          <div class="i">⚠️</div><div class="v" id="wl-sc-over">–</div><div class="l">Overloaded</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--muted),var(--border))">
+          <div class="i">💤</div><div class="v" id="wl-sc-zero">–</div><div class="l">Unassigned</div>
+        </div>
+        <div class="sc" style="--glow:linear-gradient(90deg,var(--accent2),var(--pink))">
+          <div class="i">📚</div><div class="v" id="wl-sc-hrs">–</div><div class="l">Total Hrs Assigned</div>
+        </div>
+      </div>
+
+      <!-- Workload table -->
+      <div class="sh">
+        <div class="st">📊 Faculty Workload Assignment</div>
+        <button class="btn bg bsm" onclick="openAssignModal()">＋ Assign Subject</button>
+      </div>
+      <div class="tw" id="wl-table">
+        <div class="empty"><span class="sp"></span> Loading workload data…</div>
+      </div>
+
+      <!-- Per-class breakdown -->
+      <div class="sh" style="margin-top:22px">
+        <div class="st">🎓 Class-wise Subject Allocation</div>
+      </div>
+      <div id="wl-class-breakdown">
+        <div class="empty"><span class="sp"></span></div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ════ ASSIGN SUBJECT MODAL ════ -->
+<div class="ov" id="assign-modal">
+  <div class="modal" style="width:520px">
+    <div class="mh">
+      <h3>📋 Assign Subject to Faculty</h3>
+      <button class="mx" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div class="fr">
+      <label>Select Faculty *</label>
+      <select id="am-fac">
+        <option value="">— Choose Faculty —</option>
+      </select>
+    </div>
+    <div id="am-fac-info" style="display:none;background:rgba(91,141,238,.07);border:1px solid rgba(91,141,238,.25);border-radius:8px;padding:10px 13px;margin-bottom:12px;font-size:.82rem">
+      <div id="am-fac-detail"></div>
+    </div>
+    <div class="fr">
+      <label>Select Subject *</label>
+      <select id="am-sub" onchange="onAmSubChange()">
+        <option value="">— Choose Subject —</option>
+      </select>
+    </div>
+    <div id="am-sub-info" style="display:none;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:8px;padding:10px 13px;margin-bottom:12px;font-size:.82rem">
+      <div id="am-sub-detail"></div>
+    </div>
+    <div id="am-overload-warn" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 13px;margin-bottom:12px;font-size:.82rem;color:#fca5a5">
+      ⚠️ This assignment will exceed the faculty's maximum workload!
+    </div>
+    <div class="mf">
+      <button class="btn bg" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn bp" onclick="saveAssign()">💾 Assign Subject</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<div class="ov" id="fac-modal">
+  <div class="modal">
+    <div class="mh">
+      <h3 id="fm-ttl">Add Faculty</h3>
+      <button class="mx" onclick="closeFM()">✕</button>
+    </div>
+    <input type="hidden" id="fm-id"/>
+    <div class="fr"><label>Full Name *</label>
+      <input type="text" id="fm-name" placeholder="Dr. Full Name"/>
+    </div>
+    <div class="fr"><label>Designation *</label>
+      <select id="fm-desig">
+        <option>Professor & Head</option><option>Professor</option>
+        <option>Associate Professor</option><option>Assistant Professor</option>
+        <option>Lab Instructor</option><option>Guest Faculty</option>
+      </select>
+    </div>
+    <div class="fr"><label>Specialization</label>
+      <input type="text" id="fm-spec" placeholder="e.g. Algorithms, Computer Networks"/>
+    </div>
+    <div class="fr"><label>Max Hours / Week</label>
+      <input type="number" id="fm-maxh" value="16" min="4" max="30"/>
+    </div>
+    <div class="mf">
+      <button class="btn bg" onclick="closeFM()">Cancel</button>
+      <button class="btn bp" onclick="saveFac()">💾 Save Faculty</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SUBJECT MODAL ════ -->
+<div class="ov" id="sub-modal">
+  <div class="modal">
+    <div class="mh">
+      <h3 id="sm-ttl">Add Subject</h3>
+      <button class="mx" onclick="closeSM()">✕</button>
+    </div>
+    <input type="hidden" id="sm-id"/>
+    <div class="fr"><label>Subject Name *</label>
+      <input type="text" id="sm-name" placeholder="e.g. Data Structures and Algorithms"/>
+    </div>
+    <div class="fr"><label>Subject Code</label>
+      <input type="text" id="sm-code" placeholder="e.g. 23UCSCC13"/>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Programme *</label>
+        <select id="sm-prog" onchange="onProg()">
+          <option value="UG">UG</option><option value="PG">PG</option>
+        </select>
+      </div>
+      <div class="fr"><label>Semester *</label>
+        <select id="sm-sem"></select>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Sem Type *</label>
+        <select id="sm-semt">
+          <option value="Odd">Odd</option><option value="Even">Even</option>
+        </select>
+      </div>
+      <div class="fr"><label>Subject Type *</label>
+        <select id="sm-type">
+          <option value="Theory">Theory</option><option value="Lab">Lab</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Hours / Week</label>
+        <input type="number" id="sm-hrs" value="5" min="1" max="12"/>
+      </div>
+      <div class="fr"><label>Assign Faculty</label>
+        <select id="sm-fac"><option value="">— Unassigned —</option></select>
+      </div>
+    </div>
+    <div class="fr"><label>Notes</label>
+      <textarea id="sm-notes" rows="2" placeholder="Optional…"></textarea>
+    </div>
+    <div class="mf">
+      <button class="btn bg" onclick="closeSM()">Cancel</button>
+      <button class="btn bp" onclick="saveSub()">💾 Save Subject</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   API — all files inside api/ folder
+══════════════════════════════════════ */
+const API = {
+  dash: 'api/dashboard.php',
+  fac:  'api/faculty.php',
+  sub:  'api/subjects.php',
+  tt:   'api/timetable.php',
+};
+const TITLES = {
+  dashboard:'📊 Dashboard',faculty:'👨‍🏫 Faculty Management',
+  subjects:'📚 Subjects Management',timetable:'📋 Timetable Builder',
+  staff:'🧑 Staff Timetable', workload:'📊 Workload Report'
+};
+
+/* ── NAVIGATION ──────────────────────────────────── */
+function goPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('pg-title').textContent = TITLES[name];
+  ({dashboard:loadDash, faculty:loadFac,
+    subjects:loadSub, timetable:loadTT, staff:loadStaff, workload:loadWorkload})[name]?.();
+}
+function openTT() { window.open('cs_timetable.html','_blank'); }
+
+/* ── DASHBOARD ───────────────────────────────────── */
+async function loadDash() {
+  setSyncLabel('Loading…');
+  try {
+    const j = await fetch(API.dash).then(r=>r.json());
+    if (!j.success) throw new Error(j.message);
+    const d = j.data;
+
+    // Stat cards
+    const map = {fac:d.faculty_count, sub:d.subject_count, ug:d.ug_subject_count,
+                  pg:d.pg_subject_count, lab:d.lab_count, th:d.theory_count, tt:d.timetable_count};
+    Object.entries(map).forEach(([k,v])=>{ document.getElementById('sc-'+k).textContent=v; });
+
+    // Sidebar badges
+    document.getElementById('nb-fac').textContent = d.faculty_count;
+    document.getElementById('nb-sub').textContent = d.subject_count;
+    document.getElementById('nb-tt').textContent  = d.timetable_count;
+
+    // Faculty load rows
+    const df = document.getElementById('dash-fac');
+    if (!d.faculty.length) {
+      df.innerHTML = '<div class="empty">No faculty added yet</div>';
+    } else {
+      df.innerHTML = d.faculty.map(f => {
+        const ah=f.assigned_hours, mx=f.max_hours;
+        const pct=mx?Math.round(ah/mx*100):0;
+        const col=pct>100?'var(--red)':pct>80?'var(--orange)':'var(--green)';
+        const sc=pct>100?'cr':pct>80?'co':'cg';
+        const sl=pct>100?'Overloaded':pct>80?'Near Max':'Normal';
+        const ini=initials(f.name);
+        return `<div class="fr-card">
+          <div class="av">${ini}</div>
+          <div class="fi">
+            <div class="fn">${f.name}</div>
+            <div class="fd">${f.designation}${f.specialization?' · '+f.specialization:''}</div>
+          </div>
+          <div style="flex:1;padding:0 18px;min-width:80px">
+            <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px">
+              ${ah}h / ${mx}h used
+            </div>
+            <div class="hb" style="width:100%">
+              <div class="hf" style="width:${Math.min(100,pct)}%;background:${col}"></div>
+            </div>
+          </div>
+          <div class="fh">
+            <span class="chip ${sc}">${sl}</span>
+            <div class="fht" style="margin-top:4px">${f.subject_count} subject${f.subject_count!==1?'s':''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Class summary cards
+    document.getElementById('dash-cls').innerHTML = d.class_summary.map(c=>`
+      <div class="cc">
+        <div class="cn">${c.class}</div>
+        <div class="cpr">
+          <span class="chip ${c.programme==='UG'?'cb':'cp'}">${c.programme}</span>
+        </div>
+        <div class="sr">
+          <span class="sl">Odd Sem (${c.odd_sem})</span>
+          <span>
+            <span class="dot ${c.has_tt_odd?'dg':'dx'}"></span>
+            <span style="font-size:.77rem">${c.odd_subject_count} subj</span>
+            <span style="color:${c.has_tt_odd?'var(--green)':'var(--muted)'};font-size:.69rem;margin-left:3px">
+              ${c.has_tt_odd?'✓ Saved':'No TT'}
+            </span>
+          </span>
+        </div>
+        <div class="sr">
+          <span class="sl">Even Sem (${c.even_sem})</span>
+          <span>
+            <span class="dot ${c.has_tt_even?'dg':'dx'}"></span>
+            <span style="font-size:.77rem">${c.even_subject_count} subj</span>
+            <span style="color:${c.has_tt_even?'var(--green)':'var(--muted)'};font-size:.69rem;margin-left:3px">
+              ${c.has_tt_even?'✓ Saved':'No TT'}
+            </span>
+          </span>
+        </div>
+      </div>`).join('');
+
+    setSyncLabel('Updated '+new Date().toLocaleTimeString());
+  } catch(e) { setSyncLabel('⚠ API Error'); console.error(e); }
+}
+
+/* ── FACULTY ─────────────────────────────────────── */
+let FACS = [];
+async function loadFac() {
+  try {
+    const j = await fetch(API.fac).then(r=>r.json());
+    FACS = j.data || [];
+    document.getElementById('nb-fac').textContent = FACS.length;
+    renderFac();
+  } catch(e) { showAlert('fac-alert',false,'Failed to load faculty'); }
+}
+function renderFac() {
+  const q=(document.getElementById('fac-q').value||'').toLowerCase();
+  const rows=FACS.filter(f=>
+    f.name.toLowerCase().includes(q)||
+    f.designation.toLowerCase().includes(q)||
+    (f.specialization||'').toLowerCase().includes(q)
+  );
+  const tb=document.getElementById('fac-tb');
+  if (!rows.length) { tb.innerHTML='<tr><td colspan="9" class="empty">No faculty found</td></tr>'; return; }
+  tb.innerHTML = rows.map((f,i)=>{
+    const ah=f.assigned_hours||0, mx=f.max_hours;
+    const pct=mx?Math.round(ah/mx*100):0;
+    const col=pct>100?'var(--red)':pct>80?'var(--orange)':'var(--green)';
+    const sc=pct>100?'cr':pct>80?'co':'cg';
+    const sl=pct>100?'Overloaded':pct>80?'Near Max':'Normal';
+    const ini=initials(f.name);
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av">${ini}</div>
+        <strong>${f.name}</strong>
+      </div></td>
+      <td><span style="font-size:.78rem;color:var(--muted)">${f.designation}</span></td>
+      <td>${f.specialization||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;font-weight:700">${mx}h</td>
+      <td style="text-align:center;font-weight:700">${ah}h</td>
+      <td>
+        <div class="hb"><div class="hf" style="width:${Math.min(100,pct)}%;background:${col}"></div></div>
+        <div style="font-size:.68rem;color:var(--muted);margin-top:2px">${pct}%</div>
+      </td>
+      <td><span class="chip ${sc}">${sl}</span></td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn bg bsm" onclick="editFac(${f.id})">✏️ Edit</button>
+        <button class="btn bd bsm" onclick='delFac(${f.id},"${esc(f.name)}")'>🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function openFM(fill) {
+  document.getElementById('fm-ttl').textContent = fill?'Edit Faculty':'Add Faculty';
+  setVal({
+    'fm-id':fill?.id||'', 'fm-name':fill?.name||'',
+    'fm-desig':fill?.designation||'Assistant Professor',
+    'fm-spec':fill?.specialization||'', 'fm-maxh':fill?.max_hours||16
+  });
+  open$('fac-modal');
+}
+function closeFM() { close$('fac-modal'); }
+async function saveFac() {
+  const id=getVal('fm-id');
+  const body={name:getVal('fm-name'),designation:getVal('fm-desig'),
+               specialization:getVal('fm-spec'),max_hours:+getVal('fm-maxh')};
+  const j=await post$(id?API.fac+'?id='+id:API.fac, id?'PUT':'POST', body);
+  showAlert('fac-alert',j.success,j.message);
+  if(j.success){closeFM();await loadFac();}
+}
+function editFac(id){openFM(FACS.find(x=>x.id===id));}
+async function delFac(id,name){
+  if(!confirm(`Delete "${name}"?\nThis cannot be undone.`))return;
+  const j=await fetch(API.fac+'?id='+id,{method:'DELETE'}).then(r=>r.json());
+  showAlert('fac-alert',j.success,j.message);
+  if(j.success)await loadFac();
+}
+
+/* ── SUBJECTS ────────────────────────────────────── */
+let SUBS = [];
+async function loadSub() {
+  try {
+    const ps=new URLSearchParams();
+    const g=id=>document.getElementById(id)?.value||'';
+    if(g('sf-p'))  ps.set('prog',g('sf-p'));
+    if(g('sf-s'))  ps.set('sem',g('sf-s'));
+    if(g('sf-st')) ps.set('sem_type',g('sf-st'));
+    if(g('sf-t'))  ps.set('type',g('sf-t'));
+    const j=await fetch(API.sub+(ps.toString()?'?'+ps:'')).then(r=>r.json());
+    SUBS=j.data||[];
+    document.getElementById('nb-sub').textContent=SUBS.length;
+    renderSub();
+  } catch(e) { showAlert('sub-alert',false,'Failed to load subjects'); }
+}
+function renderSub() {
+  const q=(document.getElementById('sub-q').value||'').toLowerCase();
+  const rows=SUBS.filter(s=>
+    s.name.toLowerCase().includes(q)||
+    (s.code||'').toLowerCase().includes(q)||
+    (s.faculty_name||'').toLowerCase().includes(q)
+  );
+  const tb=document.getElementById('sub-tb');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="9" class="empty">No subjects found</td></tr>';return;}
+  tb.innerHTML=rows.map((s,i)=>`<tr>
+    <td style="color:var(--muted)">${i+1}</td>
+    <td>
+      <div style="font-weight:600">${s.name}</div>
+      ${s.notes?`<div style="font-size:.7rem;color:var(--muted);margin-top:1px">${s.notes}</div>`:''}
+    </td>
+    <td><code style="font-size:.76rem;color:var(--teal);
+        background:rgba(6,182,212,.08);padding:2px 6px;border-radius:4px">
+        ${s.code||'—'}</code></td>
+    <td><span class="chip ${s.programme==='UG'?'cb':'cp'}">${s.programme}</span></td>
+    <td>
+      <div style="font-weight:600;font-size:.82rem">Sem ${s.semester}</div>
+      <div style="font-size:.7rem;color:var(--muted)">${s.sem_type}</div>
+    </td>
+    <td><span class="chip ${s.subject_type==='Lab'?'co':'ct'}">${s.subject_type}</span></td>
+    <td style="text-align:center"><strong>${s.hours_per_week}</strong>
+      <span style="color:var(--muted);font-size:.72rem">h</span></td>
+    <td>${s.faculty_name
+      ?`<div style="font-size:.81rem;font-weight:500">${s.faculty_name}</div>
+         <div style="font-size:.7rem;color:var(--muted)">${s.faculty_desig||''}</div>`
+      :'<span style="color:var(--muted);font-size:.76rem">Unassigned</span>'}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn bg bsm" onclick="editSub(${s.id})">✏️ Edit</button>
+      <button class="btn bd bsm" onclick='delSub(${s.id},"${esc(s.name)}")'>🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+function onProg() {
+  const p=getVal('sm-prog');
+  const opts=p==='UG'?['I','II','III','IV','V','VI']:['I','II','III','IV'];
+  document.getElementById('sm-sem').innerHTML=opts.map(o=>`<option>${o}</option>`).join('');
+}
+async function openSM(fill) {
+  if(!FACS.length) await loadFac();
+  document.getElementById('sm-fac').innerHTML=
+    '<option value="">— Unassigned —</option>'+
+    FACS.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  document.getElementById('sm-ttl').textContent=fill?'Edit Subject':'Add Subject';
+  setVal({'sm-id':fill?.id||'','sm-name':fill?.name||'','sm-code':fill?.code||'',
+          'sm-prog':fill?.programme||'UG'});
+  onProg();
+  setVal({'sm-sem':fill?.semester||'I','sm-semt':fill?.sem_type||'Odd',
+          'sm-type':fill?.subject_type||'Theory','sm-hrs':fill?.hours_per_week||5,
+          'sm-fac':fill?.faculty_id||'','sm-notes':fill?.notes||''});
+  open$('sub-modal');
+}
+function closeSM(){close$('sub-modal');}
+async function saveSub(){
+  const id=getVal('sm-id');
+  const body={
+    name:getVal('sm-name'), code:getVal('sm-code'),
+    programme:getVal('sm-prog'), semester:getVal('sm-sem'),
+    sem_type:getVal('sm-semt'), subject_type:getVal('sm-type'),
+    hours_per_week:+getVal('sm-hrs'),
+    faculty_id:getVal('sm-fac')||null, notes:getVal('sm-notes'),
+  };
+  const j=await post$(id?API.sub+'?id='+id:API.sub, id?'PUT':'POST', body);
+  showAlert('sub-alert',j.success,j.message);
+  if(j.success){closeSM();await loadSub();}
+}
+function editSub(id){openSM(SUBS.find(x=>x.id===id));}
+async function delSub(id,name){
+  if(!confirm(`Delete subject "${name}"?`))return;
+  const j=await fetch(API.sub+'?id='+id,{method:'DELETE'}).then(r=>r.json());
+  showAlert('sub-alert',j.success,j.message);
+  if(j.success)await loadSub();
+}
+
+/* ── TIMETABLE ───────────────────────────────────── */
+async function loadTT() {
+  try {
+    const j=await fetch(API.tt).then(r=>r.json());
+    const g=document.getElementById('tt-grid');
+    const data=j.data||[];
+    document.getElementById('tt-chip').textContent=data.length+' saved';
+    document.getElementById('nb-tt').textContent=data.length;
+    if(!data.length){
+      g.innerHTML='<div class="empty" style="grid-column:1/-1">No timetables saved yet. Open the builder to create one.</div>';
+      return;
+    }
+    g.innerHTML=data.map(t=>`
+      <div class="cc" style="cursor:pointer" onclick="openTT()">
+        <div class="cn">${t.class_name}</div>
+        <div class="cpr">
+          <span class="chip ${t.programme==='UG'?'cb':'cp'}">${t.programme}</span>
+          <span class="chip cg">${t.sem_type} Sem</span>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:6px">
+          💾 ${new Date(t.saved_at).toLocaleString()}
+        </div>
+        <div style="font-size:.72rem;color:var(--accent);margin-top:7px">
+          Open builder →
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('tt-grid').innerHTML=
+      '<div class="empty" style="grid-column:1/-1">Could not connect to timetable API</div>';
+  }
+}
+
+/* ── UTILS ───────────────────────────────────────── */
+function initials(name){ return name.split(' ').map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase(); }
+function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function getVal(id){ return document.getElementById(id)?.value??''; }
+function setVal(obj){ Object.entries(obj).forEach(([id,v])=>{ const el=document.getElementById(id); if(el)el.value=v; }); }
+function open$(id){ document.getElementById(id).classList.add('open'); }
+function close$(id){ document.getElementById(id).classList.remove('open'); }
+function setSyncLabel(t){ document.getElementById('sync-lbl').textContent=t; }
+async function post$(url,method,body){
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+function showAlert(id,ok,msg){
+  const el=document.getElementById(id);
+  el.innerHTML=`<div class="alert ${ok?'aok':'aer'}">${ok?'✅':'❌'} ${msg}</div>`;
+  setTimeout(()=>el.innerHTML='',4500);
+}
+// Close modal on overlay click
+['fac-modal','sub-modal'].forEach(id=>
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===e.currentTarget) e.currentTarget.classList.remove('open');
+  })
+);
+/* ── STAFF TIMETABLE ──────────────────────────────── */
+const DAYS_LIST = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHIFT_TIMES_ODD  = ['8:30–9:20','9:20–10:10','10:10–11:00','11:10–12:00','12:00–12:50'];
+const SHIFT_TIMES_EVEN = ['1:00–1:50','1:50–2:40','2:40–3:30','3:40–4:30','4:30–5:20'];
+const CLASSES_LIST = ['I B.Sc','II B.Sc','III B.Sc','I M.Sc','II M.Sc'];
+const CLASS_PROG_MAP  = {'I B.Sc':'UG','II B.Sc':'UG','III B.Sc':'UG','I M.Sc':'PG','II M.Sc':'PG'};
+
+async function loadStaff() {
+  if(!FACS.length) await loadFac();
+  const sel = document.getElementById('staff-fac-sel');
+  sel.innerHTML = '<option value="">— Choose Faculty —</option>' +
+    FACS.map(f=>`<option value="${f.id}">${f.name} — ${f.designation}</option>`).join('');
+  document.getElementById('staff-tt-wrap').innerHTML =
+    '<div class="empty" style="padding:60px;text-align:center;color:var(--muted);font-size:.9rem">👆 Select a faculty member above to view their timetable</div>';
+}
+
+async function loadStaffTT() {
+  const facId  = document.getElementById('staff-fac-sel').value;
+  const semType = document.getElementById('staff-oe-sel').value;
+  if(!facId) return;
+
+  const fac = FACS.find(f=>String(f.id)===String(facId));
+  if(!fac) return;
+
+  const wrap = document.getElementById('staff-tt-wrap');
+  wrap.innerHTML = '<div class="empty"><span class="sp"></span> Loading timetable…</div>';
+
+  // Load all class timetables and extract this faculty's slots
+  const times = semType === 'Odd' ? SHIFT_TIMES_ODD : SHIFT_TIMES_EVEN;
+  const numHrs = times.length;
+
+  // Grid: day → hour → [{class, subject}]
+  const grid = {};
+  DAYS_LIST.forEach(d => { grid[d] = {}; for(let h=1;h<=numHrs;h++) grid[d][h] = []; });
+
+  let totalHrs = 0;
+  const errors = [];
+
+  for(const cls of CLASSES_LIST) {
+    const prog = CLASS_PROG_MAP[cls];
+    try {
+      const params = new URLSearchParams({prog, class:cls, sem_type:semType});
+      const res = await fetch('api/timetable.php?'+params);
+      const resp = await res.json();
+      if(resp.success && resp.data && resp.data.tt_data) {
+        const ttData = resp.data.tt_data;
+        Object.entries(ttData).forEach(([slotKey, slot]) => {
+          // slotKey format: "Monday_1"
+          const parts = slotKey.split('_');
+          const day = parts[0]; const hr = parseInt(parts[1]);
+          if(!grid[day] || !slot) return;
+          // Match by full name (slot.faculty stores the full faculty name)
+          const slotFac = (slot.faculty || '').trim();
+          const facName  = fac.name.trim();
+          if(slotFac === facName || (slotFac.length > 3 && facName.includes(slotFac)) || (facName.length > 3 && slotFac.includes(facName))) {
+            if(!grid[day][hr]) grid[day][hr] = [];
+            grid[day][hr].push({ cls, sub: slot.subName || slot.subCode || '' });
+            totalHrs++;
+          }
+        });
+      }
+    } catch(e) { errors.push(cls); }
+  }
+
+  // Build timetable HTML
+  const ini = fac.name.split(' ').map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+
+  let html = `
+  <div class="tw">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="av" style="width:38px;height:38px;font-size:.82rem">${ini}</div>
+      <div>
+        <div style="font-weight:700;font-size:.95rem">${fac.name}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${fac.designation}${fac.specialization?' · '+fac.specialization:''}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="chip cg">Total: ${totalHrs} slot${totalHrs!==1?'s':''}</span>
+        <span class="chip ${semType==='Odd'?'co':'cb'}">${semType} Semester</span>
+      </div>
+    </div>
+    <div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;font-size:.69rem">
+      <span style="color:var(--muted);font-weight:700;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;align-self:center">Classes:</span>
+      <span style="background:rgba(91,141,238,.13);border:1px solid rgba(91,141,238,.4);color:var(--accent);padding:2px 8px;border-radius:12px;font-weight:700">I B.Sc</span>
+      <span style="background:rgba(139,92,246,.13);border:1px solid rgba(139,92,246,.4);color:var(--accent2);padding:2px 8px;border-radius:12px;font-weight:700">II B.Sc</span>
+      <span style="background:rgba(16,185,129,.13);border:1px solid rgba(16,185,129,.4);color:var(--green);padding:2px 8px;border-radius:12px;font-weight:700">III B.Sc</span>
+      <span style="background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.4);color:var(--orange);padding:2px 8px;border-radius:12px;font-weight:700">I M.Sc</span>
+      <span style="background:rgba(6,182,212,.13);border:1px solid rgba(6,182,212,.4);color:var(--teal);padding:2px 8px;border-radius:12px;font-weight:700">II M.Sc</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;min-width:600px">
+      <thead>
+        <tr style="background:var(--surface)">
+          <th style="padding:9px 13px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)">Day</th>
+          ${times.map((t,i)=>`<th style="padding:9px 10px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center;white-space:nowrap;border-bottom:1px solid var(--border)">Hour ${i+1}<br><span style="font-size:.6rem;font-weight:400;color:var(--muted)">${t}</span></th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>`;
+
+  DAYS_LIST.forEach((day, di) => {
+    const rowBg = di%2===0?'':'background:rgba(255,255,255,.013)';
+    html += `<tr style="${rowBg}">
+      <td style="padding:10px 13px;font-size:.82rem;font-weight:700;color:var(--text);border-top:1px solid var(--border);white-space:nowrap">${day}</td>`;
+    for(let h=1;h<=numHrs;h++) {
+      const slots = grid[day][h] || [];
+      if(slots.length === 0) {
+        html += `<td style="padding:6px 8px;border-top:1px solid var(--border);text-align:center">
+          <span style="color:var(--muted);font-size:.75rem">—</span>
+        </td>`;
+      } else {
+        html += `<td style="padding:5px 7px;border-top:1px solid var(--border);text-align:center">`;
+        slots.forEach(s => {
+          const clsColors = {
+            'I B.Sc':   {bg:'rgba(91,141,238,.13)',  border:'rgba(91,141,238,.4)',  text:'var(--accent)'},
+            'II B.Sc':  {bg:'rgba(139,92,246,.13)',  border:'rgba(139,92,246,.4)',  text:'var(--accent2)'},
+            'III B.Sc': {bg:'rgba(16,185,129,.13)',  border:'rgba(16,185,129,.4)',  text:'var(--green)'},
+            'I M.Sc':   {bg:'rgba(245,158,11,.13)',  border:'rgba(245,158,11,.4)',  text:'var(--orange)'},
+            'II M.Sc':  {bg:'rgba(6,182,212,.13)',   border:'rgba(6,182,212,.4)',   text:'var(--teal)'},
+          };
+          const c = clsColors[s.cls] || {bg:'rgba(255,255,255,.07)',border:'var(--border)',text:'var(--text)'};
+          html += `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:7px;padding:4px 7px;margin:2px 0">
+            <div style="font-size:.72rem;font-weight:700;color:${c.text};line-height:1.3">${s.sub||'—'}</div>
+            <div style="font-size:.63rem;color:var(--muted);margin-top:1px">${s.cls}</div>
+          </div>`;
+        });
+        html += `</td>`;
+      }
+    }
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+
+  if(errors.length) {
+    html += `<div style="padding:8px 14px;font-size:.72rem;color:var(--muted)">⚠ Could not load: ${errors.join(', ')}</div>`;
+  }
+
+  if(totalHrs === 0) {
+    html += `<div class="empty" style="padding:30px">No timetable data found for this faculty in ${semType} semester. Save timetable first.</div>`;
+  }
+
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+
+/* ══════════════════════════════════════
+   WORKLOAD REPORT
+══════════════════════════════════════ */
+let WL_DATA = []; // Holds faculty with subject details for current view
+
+async function loadWorkload() {
+  const semType = document.getElementById('wl-sem-sel')?.value || 'Odd';
+  const wlTable = document.getElementById('wl-table');
+  if (!wlTable) return;
+  wlTable.innerHTML = '<div class="empty"><span class="sp"></span> Loading…</div>';
+
+  try {
+    // Load faculty
+    if (!FACS.length) await loadFac();
+    // Load subjects with faculty assignments
+    const ps = new URLSearchParams({ sem_type: semType });
+    const j = await fetch(API.sub + '?' + ps).then(r => r.json());
+    const subs = j.data || [];
+
+    // Build faculty workload map
+    const facMap = {};
+    FACS.forEach(f => {
+      facMap[f.id] = {
+        ...f,
+        subjects: [],
+        assignedHrs: 0,
+      };
+    });
+
+    subs.forEach(s => {
+      if (s.faculty_id && facMap[s.faculty_id]) {
+        facMap[s.faculty_id].subjects.push(s);
+        facMap[s.faculty_id].assignedHrs += (s.hours_per_week || 0);
+      }
+    });
+
+    WL_DATA = Object.values(facMap);
+
+    // Stats
+    const total   = WL_DATA.length;
+    const overld  = WL_DATA.filter(f => f.assignedHrs > f.max_hours).length;
+    const zero    = WL_DATA.filter(f => f.assignedHrs === 0).length;
+    const normal  = total - overld - zero;
+    const totalHrs = WL_DATA.reduce((acc, f) => acc + f.assignedHrs, 0);
+
+    document.getElementById('wl-sc-total').textContent  = total;
+    document.getElementById('wl-sc-normal').textContent = normal;
+    document.getElementById('wl-sc-over').textContent   = overld;
+    document.getElementById('wl-sc-zero').textContent   = zero;
+    document.getElementById('wl-sc-hrs').textContent    = totalHrs + 'h';
+
+    renderWorkloadTable(WL_DATA);
+    renderClassBreakdown(subs, semType);
+
+  } catch(e) {
+    wlTable.innerHTML = '<div class="empty">⚠ Could not load workload data</div>';
+    console.error(e);
+  }
+}
+
+function filterWorkload() {
+  const q = (document.getElementById('wl-search')?.value || '').toLowerCase();
+  const filtered = WL_DATA.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    (f.designation || '').toLowerCase().includes(q)
+  );
+  renderWorkloadTable(filtered);
+}
+
+function renderWorkloadTable(data) {
+  const wrap = document.getElementById('wl-table');
+  if (!data.length) {
+    wrap.innerHTML = '<div class="empty">No faculty found</div>';
+    return;
+  }
+
+  let html = `<table style="width:100%;border-collapse:collapse">
+    <thead style="background:var(--surface)">
+      <tr>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left">#</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left">Faculty</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left">Assigned Subjects</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center">Hrs/Wk</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center">Max</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left">Load Bar</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center">Status</th>
+        <th style="padding:10px 13px;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center">Actions</th>
+      </tr>
+    </thead><tbody>`;
+
+  data.forEach((f, i) => {
+    const ah = f.assignedHrs, mx = f.max_hours || 16;
+    const pct = mx ? Math.round(ah / mx * 100) : 0;
+    const col  = pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--orange)' : ah === 0 ? 'var(--muted)' : 'var(--green)';
+    const sc   = pct > 100 ? 'cr' : pct > 80 ? 'co' : ah === 0 ? '' : 'cg';
+    const sl   = pct > 100 ? 'Overloaded' : pct > 80 ? 'Near Max' : ah === 0 ? 'Unassigned' : 'Normal';
+    const ini  = initials(f.name);
+
+    const subList = f.subjects.length
+      ? f.subjects.map(s =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(91,141,238,.09);border:1px solid rgba(91,141,238,.25);
+            border-radius:12px;padding:2px 8px;font-size:.7rem;margin:2px 2px;cursor:pointer;transition:all .15s"
+            title="Click to Reassign: ${s.name}"
+            onclick="showSubjectDetail(${s.id})">
+            <span style="color:var(--accent);font-weight:700">${s.name.length>22?s.name.slice(0,20)+'…':s.name}</span>
+            <span style="color:var(--muted);font-size:.63rem">${s.hours_per_week}h</span>
+          </span>`
+        ).join('')
+      : `<span style="color:var(--muted);font-size:.76rem;font-style:italic">No subjects assigned</span>`;
+
+    html += `<tr style="${i%2===0?'':'background:rgba(255,255,255,.013)'}">
+      <td style="padding:11px 13px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--border)">${i+1}</td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="av">${ini}</div>
+          <div>
+            <div style="font-weight:700;font-size:.87rem">${f.name}</div>
+            <div style="font-size:.72rem;color:var(--muted)">${f.designation || ''}${f.specialization ? ' · ' + f.specialization : ''}</div>
+          </div>
+        </div>
+      </td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);max-width:340px">${subList}</td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);text-align:center;font-weight:900;font-size:1rem;color:${col}">${ah}h</td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);text-align:center;color:var(--muted)">${mx}h</td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);min-width:120px">
+        <div class="hb" style="width:100%"><div class="hf" style="width:${Math.min(100,pct)}%;background:${col}"></div></div>
+        <div style="font-size:.68rem;color:var(--muted);margin-top:2px">${pct}% of max</div>
+      </td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);text-align:center">
+        <span class="chip ${sc}">${sl}</span>
+      </td>
+      <td style="padding:11px 13px;border-top:1px solid var(--border);text-align:center">
+        <button class="btn bg bsm" onclick="openAssignModalFor(${f.id})" title="Assign subject to this faculty">＋ Assign</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderClassBreakdown(subs, semType) {
+  const wrap = document.getElementById('wl-class-breakdown');
+  // Group by class
+  const classMap = {};
+  subs.forEach(s => {
+    const key = `${s.programme} — Sem ${s.semester}`;
+    if (!classMap[key]) classMap[key] = { prog: s.programme, sem: s.semester, subs: [] };
+    classMap[key].subs.push(s);
+  });
+
+  const entries = Object.entries(classMap);
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="empty">No subject data</div>';
+    return;
+  }
+
+  wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px;margin-bottom:20px">` +
+    entries.map(([key, d]) => {
+      const assigned   = d.subs.filter(s => s.faculty_id).length;
+      const unassigned = d.subs.length - assigned;
+      const pct = d.subs.length ? Math.round(assigned / d.subs.length * 100) : 0;
+      const col = pct === 100 ? 'var(--green)' : pct > 50 ? 'var(--orange)' : 'var(--red)';
+      return `<div class="cc">
+        <div class="cn">${key}</div>
+        <div class="cpr">
+          <span class="chip ${d.prog==='UG'?'cb':'cp'}">${d.prog}</span>
+          <span class="chip ${semType==='Odd'?'co':'cb'}">${semType}</span>
+        </div>
+        <div class="sr"><span class="sl">Total Subjects</span><span style="font-weight:700">${d.subs.length}</span></div>
+        <div class="sr"><span class="sl">Assigned</span>
+          <span style="color:var(--green);font-weight:700">✓ ${assigned}</span></div>
+        <div class="sr"><span class="sl">Unassigned</span>
+          <span style="color:${unassigned>0?'var(--red)':'var(--muted)'};font-weight:700">${unassigned>0?'⚠ ':''} ${unassigned}</span></div>
+        <div style="margin-top:8px">
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:3px">Assignment Coverage</div>
+          <div class="hb" style="width:100%"><div class="hf" style="width:${pct}%;background:${col}"></div></div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:2px">${pct}%</div>
+        </div>
+        ${d.subs.filter(s=>!s.faculty_id).length > 0 ?
+          `<div style="margin-top:8px;font-size:.7rem">
+            ${d.subs.filter(s=>!s.faculty_id).map(s=>
+              `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-top:1px solid rgba(255,255,255,.05)">
+                <span style="color:var(--muted)">${s.name.length>22?s.name.slice(0,20)+'…':s.name}</span>
+                <button class="btn bd" style="padding:2px 7px;font-size:.63rem;border-radius:5px" onclick="openAssignBySubject(${s.id})">Assign</button>
+              </div>`
+            ).join('')}
+          </div>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+}
+
+/* ─── Subject Reassign Modal ─── */
+async function showSubjectDetail(subId) {
+  if (!FACS.length) await loadFac();
+  const semType = document.getElementById('wl-sem-sel')?.value || 'Odd';
+  const j = await fetch(API.sub + '?sem_type=' + semType).then(r => r.json());
+  window._WL_ASSIGN_SUBS = j.data || [];
+  window._WL_SUBS = j.data || [];
+
+  const sub = (window._WL_SUBS || []).find(s => String(s.id) === String(subId));
+  if (!sub) return;
+  const curFac = FACS.find(f => String(f.id) === String(sub.faculty_id));
+
+  document.getElementById('rs-sub-name').textContent = sub.name;
+  document.getElementById('rs-sub-meta').innerHTML =
+    `<b>Code:</b> ${sub.code||'—'} &nbsp;|&nbsp; <b>${sub.programme}</b> Sem ${sub.semester} &nbsp;|&nbsp; ${sub.subject_type} &nbsp;|&nbsp; <b>${sub.hours_per_week}h/wk</b>`;
+  document.getElementById('rs-cur-fac').innerHTML = curFac
+    ? `<span style="color:var(--accent);font-weight:700">${curFac.name}</span> <span style="color:var(--muted);font-size:.8rem">(${curFac.designation||''}) </span>`
+    : `<span style="color:var(--muted);font-style:italic">Unassigned</span>`;
+
+  const sel = document.getElementById('rs-fac-sel');
+  sel.innerHTML = '<option value="">— Select New Faculty —</option>' +
+    FACS.map(f => {
+      const ah = f.assigned_hours || 0, mx = f.max_hours || 16;
+      const pct = mx ? Math.round(ah/mx*100) : 0;
+      const tag = pct > 100 ? '⚠ Overloaded' : pct > 80 ? '〜 Near Max' : `${ah}h/${mx}h`;
+      return `<option value="${f.id}" ${String(f.id)===String(sub.faculty_id)?'selected':''} >${f.name} — ${tag}</option>`;
+    }).join('');
+
+  window._RS_SUB = sub;
+  document.getElementById('rs-alert').innerHTML = '';
+  open$('reassign-modal');
+}
+
+async function saveReassign() {
+  const sub = window._RS_SUB;
+  const newFacId = document.getElementById('rs-fac-sel').value;
+  if (!newFacId) {
+    document.getElementById('rs-alert').innerHTML = '<div class="alert aer">⚠ Please select a faculty member.</div>';
+    return;
+  }
+  const newFac = FACS.find(f => String(f.id) === String(newFacId));
+  const newTotal = (newFac?.assigned_hours || 0) + (sub.hours_per_week || 0);
+  if (newTotal > (newFac?.max_hours || 16)) {
+    if (!confirm(`⚠️ ${newFac?.name} will be at ${newTotal}h exceeding max ${newFac?.max_hours}h.\n\nContinue anyway?`)) return;
+  }
+  const j = await post$(API.sub + '?id=' + sub.id, 'PUT', {
+    name: sub.name, code: sub.code, programme: sub.programme,
+    semester: sub.semester, sem_type: sub.sem_type, subject_type: sub.subject_type,
+    hours_per_week: sub.hours_per_week, faculty_id: newFacId, notes: sub.notes || ''
+  });
+  if (j.success) {
+    close$('reassign-modal');
+    showAlert('wl-alert', true, `✅ "${sub.name}" reassigned to ${newFac?.name}`);
+    await loadWorkload(); await loadFac();
+  } else {
+    document.getElementById('rs-alert').innerHTML = `<div class="alert aer">❌ ${j.message}</div>`;
+  }
+}
+
+/* ─── Assign Modal ─── */
+async function openAssignModal() {
+  if (!FACS.length) await loadFac();
+  const semType = document.getElementById('wl-sem-sel')?.value || 'Odd';
+  const j = await fetch(API.sub + '?sem_type=' + semType).then(r => r.json());
+  const subs = (j.data || []).filter(s => !s.faculty_id);
+  window._WL_ASSIGN_SUBS = j.data || [];
+  window._WL_SUBS = j.data || [];
+
+  document.getElementById('am-fac').innerHTML =
+    '<option value="">— Choose Faculty —</option>' +
+    FACS.map(f => `<option value="${f.id}">${f.name} — ${f.designation}</option>`).join('');
+  document.getElementById('am-sub').innerHTML =
+    '<option value="">— Choose Subject —</option>' +
+    subs.map(s => `<option value="${s.id}">${s.name} (${s.hours_per_week}h) — ${s.programme} Sem ${s.semester}</option>`).join('');
+
+  document.getElementById('am-fac-info').style.display = 'none';
+  document.getElementById('am-sub-info').style.display = 'none';
+  document.getElementById('am-overload-warn').style.display = 'none';
+  document.getElementById('am-fac').onchange = onAmFacChange;
+  open$('assign-modal');
+}
+
+async function openAssignModalFor(facId) {
+  await openAssignModal();
+  document.getElementById('am-fac').value = facId;
+  onAmFacChange();
+}
+
+async function openAssignBySubject(subId) {
+  await openAssignModal();
+  document.getElementById('am-sub').value = subId;
+  onAmSubChange();
+}
+
+function onAmFacChange() {
+  const facId = document.getElementById('am-fac').value;
+  const fac = FACS.find(f => String(f.id) === String(facId));
+  const infoEl = document.getElementById('am-fac-info');
+  if (!fac) { infoEl.style.display = 'none'; return; }
+  const ah = fac.assigned_hours || 0, mx = fac.max_hours || 16;
+  const pct = mx ? Math.round(ah/mx*100) : 0;
+  const col = pct > 100 ? '#ef4444' : pct > 80 ? '#f59e0b' : '#10b981';
+  infoEl.style.display = 'block';
+  document.getElementById('am-fac-detail').innerHTML =
+    `<strong>${fac.name}</strong> — ${fac.designation}<br>
+    Current load: <strong style="color:${col}">${ah}h / ${mx}h (${pct}%)</strong>`;
+  checkOverload();
+}
+
+function onAmSubChange() {
+  const subId = document.getElementById('am-sub').value;
+  const sub = (window._WL_ASSIGN_SUBS || []).find(s => String(s.id) === String(subId));
+  const infoEl = document.getElementById('am-sub-info');
+  if (!sub) { infoEl.style.display = 'none'; return; }
+  infoEl.style.display = 'block';
+  document.getElementById('am-sub-detail').innerHTML =
+    `<strong>${sub.name}</strong><br>
+    Code: <code style="color:var(--teal)">${sub.code||'—'}</code> &nbsp;|&nbsp;
+    ${sub.programme} Sem ${sub.semester} &nbsp;|&nbsp;
+    ${sub.subject_type} &nbsp;|&nbsp; <strong>${sub.hours_per_week}h/wk</strong>`;
+  checkOverload();
+}
+
+function checkOverload() {
+  const facId = document.getElementById('am-fac').value;
+  const subId = document.getElementById('am-sub').value;
+  const fac = FACS.find(f => String(f.id) === String(facId));
+  const sub = (window._WL_ASSIGN_SUBS || []).find(s => String(s.id) === String(subId));
+  const warn = document.getElementById('am-overload-warn');
+  if (fac && sub) {
+    const newTotal = (fac.assigned_hours || 0) + (sub.hours_per_week || 0);
+    warn.style.display = newTotal > (fac.max_hours || 16) ? 'block' : 'none';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+function closeAssignModal() { close$('assign-modal'); }
+
+async function saveAssign() {
+  const facId = document.getElementById('am-fac').value;
+  const subId = document.getElementById('am-sub').value;
+  if (!facId || !subId) { showAlert('wl-alert', false, 'Please select both Faculty and Subject'); return; }
+  const fac = FACS.find(f => String(f.id) === String(facId));
+  const sub = (window._WL_ASSIGN_SUBS || []).find(s => String(s.id) === String(subId));
+  const newTotal = (fac?.assigned_hours || 0) + (sub?.hours_per_week || 0);
+  if (newTotal > (fac?.max_hours || 16)) {
+    if (!confirm(`⚠️ This will make ${fac?.name}'s total ${newTotal}h exceeding max ${fac?.max_hours}h.\n\nContinue anyway?`)) return;
+  }
+  const j = await post$(API.sub + '?id=' + subId, 'PUT', {
+    name: sub.name, code: sub.code, programme: sub.programme,
+    semester: sub.semester, sem_type: sub.sem_type, subject_type: sub.subject_type,
+    hours_per_week: sub.hours_per_week, faculty_id: facId, notes: sub.notes || ''
+  });
+  showAlert('wl-alert', j.success, j.success ? `✅ ${sub?.name} assigned to ${fac?.name}` : j.message);
+  if (j.success) { closeAssignModal(); await loadWorkload(); await loadFac(); }
+}
+
+/* ─── PDF Report (Official Format) ─── */
+async function exportWorkloadPDF() {
+  if (!window.jspdf) { alert('PDF library not loaded'); return; }
+  const { jsPDF } = window.jspdf;
+  const semType = document.getElementById('wl-sem-sel')?.value || 'Odd';
+  const acYear = '2025-2026';
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW = 210, ML = 15, MR = 15, CW = PW - ML - MR; // 180mm content width
+
+  // ── HEADER ──
+  // College name
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(0,0,0);
+  doc.text('Government Arts and Science College,', PW/2, 18, {align:'center'});
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Tittagudi– 606106.', PW/2, 24, {align:'center'});
+
+  // Dept line
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(12);
+  doc.text('Department of Computer Science', PW/2, 32, {align:'center'});
+
+  // Title with underline
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Subject Allocation and Work Load', PW/2, 40, {align:'center'});
+  const titleW = doc.getTextWidth('Subject Allocation and Work Load');
+  doc.setLineWidth(0.5);
+  doc.line(PW/2 - titleW/2, 41.5, PW/2 + titleW/2, 41.5);
+
+  // Semester / Academic Year row
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text(`Semester: ${semType}`, ML, 49);
+  doc.text(`Academic year: ${acYear}`, PW - MR, 49, {align:'right'});
+
+  // ── TABLE using autoTable with row spans via didDrawCell ──
+  // Build rows: each subject = 1 row; Sl.No, Faculty Name, Total Hours are merged
+  const tableRows = [];
+  WL_DATA.forEach((f, fi) => {
+    const subs = f.subjects.length ? f.subjects : [{name:'—', programme:'', hours_per_week:''}];
+    subs.forEach((s, si) => {
+      const semMap = {'I':'I','II':'II','III':'III','IV':'IV','V':'V','VI':'VI'};
+      const semLabel = semMap[s.semester] || s.semester || '';
+      const classLabel = s.class_name ||
+        (s.programme === 'UG' ? `${semLabel} B.Sc. CS` :
+         s.programme === 'PG' ? `${semLabel} M.Sc. CS` : '—');
+      tableRows.push({
+        slNo:    si === 0 ? String(fi+1) + '.' : '',
+        facName: si === 0 ? f.name : '',
+        subName: s.name || '—',
+        class:   classLabel,
+        hrs:     s.hours_per_week ? String(s.hours_per_week) : '—',
+        total:   si === 0 ? String(f.assignedHrs) : '',
+        isFirst: si === 0,
+        isLast:  si === subs.length - 1,
+        facRowCount: subs.length,
+      });
+    });
+  });
+
+  // Col widths: Sl(12) FacName(38) SubName(55) Class(32) Hrs(18) Total(18) = 173 → adjust
+  const cols = { sl:12, fac:40, sub:55, cls:34, hrs:18, tot:18 };
+
+  doc.autoTable({
+    startY: 53,
+    head: [[
+      {content:'Sl.No.', styles:{halign:'center',valign:'middle'}},
+      {content:'Faculty Name', styles:{halign:'center',valign:'middle'}},
+      {content:'Subject Name', styles:{halign:'center',valign:'middle'}},
+      {content:'Class', styles:{halign:'center',valign:'middle'}},
+      {content:'No. of Hours', styles:{halign:'center',valign:'middle'}},
+      {content:'Total Hours', styles:{halign:'center',valign:'middle'}},
+    ]],
+    body: tableRows.map(r => [r.slNo, r.facName, r.subName, r.class, r.hrs, r.total]),
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: {top:3,bottom:3,left:3,right:3}, valign:'middle', lineColor:[0,0,0], lineWidth:0.3 },
+    headStyles: { fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', fontSize:9,
+                  lineColor:[0,0,0], lineWidth:0.3, halign:'center' },
+    columnStyles: {
+      0: { cellWidth: cols.sl,  halign:'center' },
+      1: { cellWidth: cols.fac, fontStyle:'bold' },
+      2: { cellWidth: cols.sub },
+      3: { cellWidth: cols.cls, halign:'center' },
+      4: { cellWidth: cols.hrs, halign:'center' },
+      5: { cellWidth: cols.tot, halign:'center', fontStyle:'bold' },
+    },
+    margin: { left: ML, right: MR, bottom: 25 },
+    didParseCell: (d) => {
+      if (d.section !== 'body') return;
+      const row = tableRows[d.row.index];
+      if (!row) return;
+      // Bold faculty name
+      if (d.column.index === 1 && row.isFirst) d.cell.styles.fontStyle = 'bold';
+      // Empty middle rows: remove top border for merged look
+      if ((d.column.index === 0 || d.column.index === 1 || d.column.index === 5) && !row.isFirst) {
+        d.cell.styles.lineColor = [255,255,255]; // hide top border for merged cells
+      }
+    },
+    didDrawCell: (d) => {
+      if (d.section !== 'body') return;
+      const row = tableRows[d.row.index];
+      if (!row) return;
+      // For Sl.No, Faculty Name, Total Hours columns — redraw to simulate merge
+      // Draw white over internal borders for continuation rows
+      if ((d.column.index === 0 || d.column.index === 1 || d.column.index === 5) && !row.isFirst) {
+        doc.setFillColor(255,255,255);
+        doc.rect(d.cell.x, d.cell.y, d.cell.width, 0.4, 'F'); // cover top line
+      }
+    },
+    margin: { left: ML, right: MR, bottom: 25 },
+  });
+
+  // ── FOOTER SIGNATURES ──
+  const finalY = doc.lastAutoTable.finalY + 18;
+  const safeY = finalY > 265 ? 270 : finalY;
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(10);
+  doc.text('Head of the Department', ML, safeY);
+  doc.text('Principal', PW - MR, safeY, {align:'right'});
+
+  doc.save(`CS_Workload_${semType}_${acYear}.pdf`);
+  showAlert('wl-alert', true, '✅ Official Workload PDF downloaded');
+}
+
+// Boot
+onProg();
+loadDash();
+</script>
+<!-- ════ REASSIGN MODAL ════ -->
+<div class="ov" id="reassign-modal">
+  <div class="modal" style="width:500px">
+    <div class="mh">
+      <h3>✏️ Reassign Subject</h3>
+      <button class="mx" onclick="close$('reassign-modal')">✕</button>
+    </div>
+    <!-- Subject Info -->
+    <div style="background:rgba(91,141,238,.07);border:1px solid rgba(91,141,238,.2);border-radius:10px;padding:13px 15px;margin-bottom:16px">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:5px" id="rs-sub-name">—</div>
+      <div style="font-size:.78rem;color:var(--muted)" id="rs-sub-meta">—</div>
+    </div>
+    <!-- Current Faculty -->
+    <div style="margin-bottom:14px;font-size:.82rem">
+      <span style="color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em">Currently Assigned To</span><br/>
+      <div style="margin-top:5px" id="rs-cur-fac">—</div>
+    </div>
+    <!-- New Faculty Select -->
+    <div class="fr">
+      <label>Reassign To *</label>
+      <select id="rs-fac-sel" style="width:100%">
+        <option value="">— Select New Faculty —</option>
+      </select>
+    </div>
+    <div id="rs-alert"></div>
+    <div class="mf">
+      <button class="btn bg" onclick="close$('reassign-modal')">Cancel</button>
+      <button class="btn bp" onclick="saveReassign()">✅ Save Reassignment</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
